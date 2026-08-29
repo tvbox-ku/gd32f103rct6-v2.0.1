@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Microsoft YaHei, sans-serif">
+  <rect x="0" y="0" width="480" height="320" fill="#ffffff"/>
+
+  <!-- 顶栏状态 -->
+  <rect x="2" y="2" width="62" height="28" fill="#e8e8ec"/>
+  <text x="33" y="21" text-anchor="middle" font-size="13" fill="#333">进气</text>
+  <rect x="66" y="2" width="62" height="28" fill="#e8e8ec"/>
+  <text x="97" y="21" text-anchor="middle" font-size="13" fill="#333">排气</text>
+  <rect x="130" y="2" width="62" height="28" fill="#2bb673"/>
+  <text x="161" y="21" text-anchor="middle" font-size="13" fill="#fff">送电</text>
+  <rect x="194" y="2" width="62" height="28" fill="#e8e8ec"/>
+  <text x="225" y="21" text-anchor="middle" font-size="13" fill="#333">警报</text>
+
+  <text x="20" y="70" font-size="16" fill="#333">柜内温度 :</text>
+  <text x="200" y="72" font-size="18" font-weight="bold" fill="#333">26℃</text>
+
+  <text x="20" y="112" font-size="16" fill="#333">柜内压力 :</text>
+  <text x="200" y="114" font-size="18" font-weight="bold" fill="#333">0250Pa</text>
+
+  <rect x="0" y="130" width="480" height="38" fill="#2bb673"/>
+  <text x="240" y="154" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">系统运行中</text>
+
+  <text x="20" y="196" font-size="15" fill="#333">压力正常值 :</text>
+  <text x="200" y="197" font-size="15" fill="#333">0150 ~ 0300Pa</text>
+
+  <text x="20" y="236" font-size="15" fill="#333">流失流量 :</text>
+  <text x="200" y="237" font-size="16" font-weight="bold" fill="#333">0027</text>
+  <text x="250" y="237" font-size="15" fill="#333">L/h</text>
+
+  <rect x="15" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+  <text x="84" y="295" text-anchor="middle" font-size="14" fill="#fff">取消警报</text>
+  <rect x="327" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+  <text x="396" y="295" text-anchor="middle" font-size="14" fill="#fff">返回主页</text>
+</svg>

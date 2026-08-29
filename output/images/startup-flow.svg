@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" font-family="Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="560" height="560" fill="#f7f9fb"/>
+  <text x="280" y="32" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a1a1a">正压启动操作流程</text>
+
+  <rect x="180" y="52" width="200" height="42" rx="8" fill="#1b6fd0"/>
+  <text x="280" y="78" text-anchor="middle" font-size="14" fill="#fff">上电开机（自检）</text>
+  <line x1="280" y1="94" x2="280" y2="124" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="180" y="126" width="200" height="42" rx="8" fill="#1b6fd0"/>
+  <text x="280" y="152" text-anchor="middle" font-size="14" fill="#fff">主页按「正压启动」</text>
+  <line x1="280" y1="168" x2="280" y2="198" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="180" y="200" width="200" height="42" rx="8" fill="#e8b339"/>
+  <text x="280" y="226" text-anchor="middle" font-size="14" fill="#fff">换气倒计时（默认 900s）</text>
+  <line x1="280" y1="242" x2="280" y2="272" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+
+  <polygon points="280,274 380,318 280,362 180,318" fill="#e8b339"/>
+  <text x="280" y="314" text-anchor="middle" font-size="13" fill="#fff">压力达到</text>
+  <text x="280" y="330" text-anchor="middle" font-size="13" fill="#fff">正常范围？</text>
+
+  <!-- 否（左） -->
+  <line x1="180" y1="318" x2="100" y2="318" stroke="#c0392b" stroke-width="2"/>
+  <line x1="100" y1="318" x2="100" y2="222" stroke="#c0392b" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="92" y="210" font-size="12" fill="#c0392b">否（继续换气）</text>
+
+  <!-- 是（下） -->
+  <line x1="280" y1="362" x2="280" y2="392" stroke="#2f855a" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="296" y="384" font-size="12" fill="#2f855a">是</text>
+
+  <rect x="180" y="394" width="200" height="42" rx="8" fill="#2f855a"/>
+  <text x="280" y="420" text-anchor="middle" font-size="14" fill="#fff">自动送电（接通负载）</text>
+  <line x1="280" y1="436" x2="280" y2="466" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+
+  <rect x="150" y="468" width="260" height="54" rx="8" fill="#2f855a"/>
+  <text x="280" y="490" text-anchor="middle" font-size="14" fill="#fff">系统运行中</text>
+  <text x="280" y="510" text-anchor="middle" font-size="12" fill="#dff0e7">稳压控制 + 每30s流失流量自动监测</text>
+</svg>

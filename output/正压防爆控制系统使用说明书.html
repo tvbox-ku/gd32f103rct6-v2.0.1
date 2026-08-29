@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正压防爆控制系统 用户使用说明书</title>
+<style>
+  :root{
+    --primary:#1b6fd0;
+    --primary-dark:#1357a8;
+    --green:#2f855a;
+    --red:#c0392b;
+    --amber:#e8b339;
+    --ink:#1a1a1a;
+    --muted:#666;
+    --line:#d8dde3;
+    --bg-soft:#f5f6f8;
+    --bg-callout:#fff8e6;
+    --bg-danger:#fdecea;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Microsoft YaHei","微软雅黑","PingFang SC","Hiragino Sans GB",sans-serif;
+    color:var(--ink);
+    line-height:1.75;
+    font-size:15px;
+    background:#eaecef;
+  }
+  .page{
+    max-width:880px;
+    margin:24px auto;
+    background:#fff;
+    padding:56px 64px 72px;
+    box-shadow:0 2px 18px rgba(0,0,0,.08);
+    border-radius:4px;
+  }
+  /* 封面 */
+  .cover{
+    text-align:center;
+    padding:64px 0 48px;
+    border-bottom:3px solid var(--primary);
+    margin-bottom:36px;
+  }
+  .cover h1{
+    font-size:34px;
+    color:var(--primary);
+    margin:0 0 10px;
+    letter-spacing:2px;
+  }
+  .cover .sub{font-size:18px;color:#333;margin:6px 0 18px;}
+  .cover .meta{
+    display:inline-block;
+    background:var(--bg-soft);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px 28px;
+    font-size:14px;
+    color:#444;
+    text-align:left;
+  }
+  .cover .meta b{color:var(--primary-dark);}
+  /* 标题 */
+  h2{
+    font-size:22px;
+    color:var(--primary);
+    border-left:6px solid var(--primary);
+    padding-left:12px;
+    margin:40px 0 18px;
+    page-break-after:avoid;
+  }
+  h3{
+    font-size:17px;
+    color:var(--primary-dark);
+    margin:26px 0 12px;
+    page-break-after:avoid;
+  }
+  p{margin:10px 0;}
+  ul,ol{margin:10px 0 10px 22px;padding:0;}
+  li{margin:6px 0;}
+  strong{color:#111;}
+  /* 表格 */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:14px 0 20px;
+    font-size:14.5px;
+    page-break-inside:avoid;
+  }
+  th,td{
+    border:1px solid var(--line);
+    padding:9px 12px;
+    text-align:left;
+    vertical-align:top;
+  }
+  th{
+    background:var(--primary);
+    color:#fff;
+    font-weight:600;
+  }
+  tr:nth-child(even) td{background:#f7f9fc;}
+  /* 图 */
+  .figure{
+    text-align:center;
+    margin:18px 0 22px;
+    page-break-inside:avoid;
+  }
+  .figure svg{
+    max-width:100%;
+    height:auto;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fff;
+  }
+  .figure .cap{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:8px;
+  }
+  /* 提示框 */
+  .callout{
+    border-left:5px solid var(--amber);
+    background:var(--bg-callout);
+    padding:12px 16px;
+    margin:14px 0;
+    border-radius:0 6px 6px 0;
+    font-size:14.5px;
+  }
+  .danger{
+    border-left:5px solid var(--red);
+    background:var(--bg-danger);
+    padding:12px 16px;
+    margin:14px 0;
+    border-radius:0 6px 6px 0;
+    font-size:14.5px;
+  }
+  .danger strong{color:var(--red);}
+  /* 公式 / 代码 */
+  code{
+    background:#eef2f7;
+    color:#c0392b;
+    padding:2px 6px;
+    border-radius:4px;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:13.5px;
+  }
+  .formula{
+    background:#0f2a44;
+    color:#e8f1ff;
+    padding:14px 18px;
+    border-radius:6px;
+    font-family:"Consolas","Courier New",monospace;
+    font-size:14px;
+    margin:12px 0;
+    overflow-x:auto;
+  }
+  hr{
+    border:none;
+    border-top:1px dashed var(--line);
+    margin:28px 0;
+  }
+  .footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-top:36px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-style:italic;
+  }
+  /* 打印 */
+  @media print{
+    body{background:#fff;}
+    .page{
+      max-width:none;
+      margin:0;
+      box-shadow:none;
+      border-radius:0;
+      padding:24px 28mm;
+    }
+    h2,h3{page-break-after:avoid;}
+    .figure,table{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <h1>正压防爆控制系统</h1>
+    <div class="sub">用户使用说明书</div>
+    <div class="meta">
+      版本：<b>V1.0.1</b><br>
+      厂家：谷子防爆电气有限公司<br>
+      服务电话：<b>13023456789</b>
+    </div>
+  </div>
+
+  <!-- 一 -->
+  <h2>一、产品概述</h2>
+  <p>本系统是一套<strong>正压防爆电气控制装置</strong>，用于对防爆柜体进行正压维持、换气吹扫、欠压断电保护，并对柜内压力、温度以及柜体流失流量进行实时监测与显示。系统采用 3.5 寸彩色触摸显示屏，通过 3 个实体按键完成全部操作。</p>
+  <p><strong>主要功能</strong></p>
+  <ul>
+    <li>柜内压力、温度实时监测与显示；</li>
+    <li>进气 / 排气继电器自动稳压控制（维持柜内正压）；</li>
+    <li>换气吹扫倒计时；</li>
+    <li>欠压延时自动切断送电（防爆安全保护）；</li>
+    <li>超压、欠压、超温、传感器故障声光报警；</li>
+    <li>压力衰减法测量柜体流失流量（30s 自动滚动测量）；</li>
+    <li>参数、密码、校准数据掉电保存（内置 Flash）。</li>
+  </ul>
+
+  <!-- 二 -->
+  <h2>二、主要技术参数</h2>
+  <table>
+    <tr><th>项目</th><th>参数</th></tr>
+    <tr><td>主控芯片</td><td>GD32F103RCT6（ARM Cortex-M3）</td></tr>
+    <tr><td>显示屏</td><td>3.5 寸 TFT 彩色屏，480×320 横屏</td></tr>
+    <tr><td>电源输入</td><td>直流供电（按柜体配电规格）</td></tr>
+    <tr><td>压力传感器</td><td>压力变送器（柜内正压）</td></tr>
+    <tr><td>温度传感器</td><td>PT100 铂电阻</td></tr>
+    <tr><td>继电器输出</td><td>进气、排气、警报、送电 共 4 路</td></tr>
+    <tr><td>按键</td><td>3 个（短按 / 长按 3 秒）</td></tr>
+    <tr><td>报警方式</td><td>蜂鸣器 + 屏幕声光提示</td></tr>
+  </table>
+  <p><strong>出厂默认参数</strong></p>
+  <table>
+    <tr><th>参数</th><th>默认值</th></tr>
+    <tr><td>压力下限</td><td>150 Pa</td></tr>
+    <tr><td>压力下下限</td><td>80 Pa</td></tr>
+    <tr><td>压力上限</td><td>300 Pa</td></tr>
+    <tr><td>压力上上限</td><td>400 Pa</td></tr>
+    <tr><td>温度上限</td><td>80 ℃</td></tr>
+    <tr><td>换气时间</td><td>900 s</td></tr>
+    <tr><td>流量满量程</td><td>3200 m³/h</td></tr>
+    <tr><td>柜体容积</td><td>250 L（0.25 m³）</td></tr>
+    <tr><td>系统密码</td><td>555（万能密码 995）</td></tr>
+  </table>
+
+  <!-- 三 -->
+  <h2>三、系统组成与接线</h2>
+  <p>系统由主控单元、传感器、继电器输出和显示屏按键四部分组成。传感器信号接入主控 ADC 接口，主控根据压力、温度控制各继电器动作。</p>
+  <div class="figure">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 430" font-family="Microsoft YaHei, sans-serif">
+      <rect x="0" y="0" width="860" height="430" fill="#f5f6f8"/>
+      <text x="430" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a1a">系统接线示意图</text>
+      <rect x="20" y="55" width="210" height="220" rx="10" fill="#eef3fb" stroke="#2b6cb0" stroke-width="1.5"/>
+      <text x="125" y="80" text-anchor="middle" font-size="15" font-weight="bold" fill="#2b6cb0">输入 · 传感器</text>
+      <rect x="40" y="95" width="170" height="46" rx="6" fill="#fff" stroke="#888"/>
+      <text x="125" y="114" text-anchor="middle" font-size="13">温度传感器 PT100</text>
+      <text x="125" y="132" text-anchor="middle" font-size="12" fill="#666">→ PC5 / ADC15</text>
+      <rect x="40" y="150" width="170" height="46" rx="6" fill="#fff" stroke="#888"/>
+      <text x="125" y="169" text-anchor="middle" font-size="13">压力变送器（柜压）</text>
+      <text x="125" y="187" text-anchor="middle" font-size="12" fill="#666">→ PC4 / ADC14</text>
+      <rect x="40" y="205" width="170" height="46" rx="6" fill="#fff" stroke="#888"/>
+      <text x="125" y="224" text-anchor="middle" font-size="13">风压变送器（备）</text>
+      <text x="125" y="242" text-anchor="middle" font-size="12" fill="#666">→ PC2 / ADC12</text>
+      <rect x="310" y="55" width="240" height="220" rx="10" fill="#eafaf1" stroke="#2f855a" stroke-width="1.5"/>
+      <text x="430" y="80" text-anchor="middle" font-size="15" font-weight="bold" fill="#2f855a">主控单元</text>
+      <rect x="335" y="95" width="190" height="44" rx="6" fill="#2f855a"/>
+      <text x="430" y="122" text-anchor="middle" font-size="15" fill="#fff" font-weight="bold">GD32F103RCT6</text>
+      <text x="430" y="160" text-anchor="middle" font-size="12" fill="#333">3.5寸 480×320 显示屏</text>
+      <text x="430" y="182" text-anchor="middle" font-size="12" fill="#333">按键 ×3（KEY1/2/3）</text>
+      <text x="430" y="204" text-anchor="middle" font-size="12" fill="#333">蜂鸣器 · Flash 参数存储</text>
+      <text x="430" y="250" text-anchor="middle" font-size="12" fill="#666">正压稳压 + 欠压断电 + 流失流量监测</text>
+      <rect x="630" y="55" width="210" height="220" rx="10" fill="#fdf2f2" stroke="#c0392b" stroke-width="1.5"/>
+      <text x="735" y="80" text-anchor="middle" font-size="15" font-weight="bold" fill="#c0392b">输出 · 继电器</text>
+      <rect x="650" y="95" width="170" height="40" rx="6" fill="#fff" stroke="#888"/>
+      <text x="735" y="120" text-anchor="middle" font-size="13">排气 → PD2</text>
+      <rect x="650" y="142" width="170" height="40" rx="6" fill="#fff" stroke="#888"/>
+      <text x="735" y="167" text-anchor="middle" font-size="13">进气 → PC0</text>
+      <rect x="650" y="189" width="170" height="40" rx="6" fill="#fff" stroke="#888"/>
+      <text x="735" y="214" text-anchor="middle" font-size="13">警报 → PC12</text>
+      <rect x="650" y="236" width="170" height="40" rx="6" fill="#fff" stroke="#888"/>
+      <text x="735" y="261" text-anchor="middle" font-size="13">送电 → PC1</text>
+      <line x1="230" y1="165" x2="310" y2="165" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+      <line x1="550" y1="165" x2="630" y2="165" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+      <defs>
+        <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#555"/>
+        </marker>
+      </defs>
+      <rect x="20" y="320" width="820" height="90" rx="8" fill="#fff" stroke="#ccc"/>
+      <text x="40" y="348" font-size="13" font-weight="bold" fill="#333">运行原理</text>
+      <text x="40" y="372" font-size="12.5" fill="#444">1. 传感器实时采集柜内压力、温度，主控按设定区间控制进/排气继电器维持柜内正压；</text>
+      <text x="40" y="393" font-size="12.5" fill="#444">2. 压力低于下限持续 10s 自动切断送电（欠压保护）；温度超限或压力超限触发声光报警；</text>
+      <text x="40" y="414" font-size="12.5" fill="#444">3. 进/排气都关闭的空闲时段，自动按压力衰减法每 30s 测算柜体流失流量（L/h）。</text>
+    </svg>
+    <div class="cap">图 3-1　系统接线示意图</div>
+  </div>
+  <table>
+    <tr><th>接口</th><th>说明</th></tr>
+    <tr><td>PC5 / ADC15</td><td>温度传感器 PT100</td></tr>
+    <tr><td>PC4 / ADC14</td><td>压力变送器（柜内压力）</td></tr>
+    <tr><td>PC2 / ADC12</td><td>风压变送器（备用 / 进气测量）</td></tr>
+    <tr><td>PD2 / PC0</td><td>排气 / 进气继电器</td></tr>
+    <tr><td>PC12 / PC1</td><td>警报 / 送电继电器</td></tr>
+  </table>
+  <div class="callout">接线前请确认断电，传感器与继电器接线遵循柜体电气图纸与防爆规范。</div>
+
+  <!-- 四 -->
+  <h2>四、界面与按键说明</h2>
+
+  <h3>4.1 主页面</h3>
+  <p>上电完成开机自检后进入主页面。</p>
+  <div class="figure">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Microsoft YaHei, sans-serif">
+      <rect x="0" y="0" width="480" height="320" fill="#ffffff"/>
+      <rect x="0" y="316" width="480" height="4" fill="#1b6fd0"/>
+      <text x="240" y="95" text-anchor="middle" font-size="24" font-weight="bold" fill="#1b6fd0">欢迎使用正压防爆系统</text>
+      <text x="240" y="140" text-anchor="middle" font-size="16" fill="#333">服务电话 : 13023456789</text>
+      <text x="240" y="190" text-anchor="middle" font-size="22" font-weight="bold" fill="#1b6fd0">谷子防爆电气有限公司</text>
+      <rect x="15" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="84" y="295" text-anchor="middle" font-size="15" fill="#fff">正压启动</text>
+      <rect x="171" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="240" y="295" text-anchor="middle" font-size="15" fill="#fff">系统设置</text>
+      <rect x="327" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="396" y="295" text-anchor="middle" font-size="15" fill="#fff">系统调试</text>
+    </svg>
+    <div class="cap">图 4-1　主页界面</div>
+  </div>
+  <table>
+    <tr><th>按钮</th><th>对应按键</th><th>功能</th></tr>
+    <tr><td>正压启动</td><td>KEY1</td><td>进入正压启动流程</td></tr>
+    <tr><td>系统设置</td><td>KEY2</td><td>进入系统设置（需密码）</td></tr>
+    <tr><td>系统调试</td><td>KEY3</td><td>进入系统调试（需密码）</td></tr>
+  </table>
+
+  <h3>4.2 正压运行界面</h3>
+  <p>正压启动并运行稳定后显示运行界面。</p>
+  <div class="figure">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Microsoft YaHei, sans-serif">
+      <rect x="0" y="0" width="480" height="320" fill="#ffffff"/>
+      <rect x="2" y="2" width="62" height="28" fill="#e8e8ec"/>
+      <text x="33" y="21" text-anchor="middle" font-size="13" fill="#333">进气</text>
+      <rect x="66" y="2" width="62" height="28" fill="#e8e8ec"/>
+      <text x="97" y="21" text-anchor="middle" font-size="13" fill="#333">排气</text>
+      <rect x="130" y="2" width="62" height="28" fill="#2bb673"/>
+      <text x="161" y="21" text-anchor="middle" font-size="13" fill="#fff">送电</text>
+      <rect x="194" y="2" width="62" height="28" fill="#e8e8ec"/>
+      <text x="225" y="21" text-anchor="middle" font-size="13" fill="#333">警报</text>
+      <text x="20" y="70" font-size="16" fill="#333">柜内温度 :</text>
+      <text x="200" y="72" font-size="18" font-weight="bold" fill="#333">26℃</text>
+      <text x="20" y="112" font-size="16" fill="#333">柜内压力 :</text>
+      <text x="200" y="114" font-size="18" font-weight="bold" fill="#333">0250Pa</text>
+      <rect x="0" y="130" width="480" height="38" fill="#2bb673"/>
+      <text x="240" y="154" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">系统运行中</text>
+      <text x="20" y="196" font-size="15" fill="#333">压力正常值 :</text>
+      <text x="200" y="197" font-size="15" fill="#333">0150 ~ 0300Pa</text>
+      <text x="20" y="236" font-size="15" fill="#333">流失流量 :</text>
+      <text x="200" y="237" font-size="16" font-weight="bold" fill="#333">0027</text>
+      <text x="250" y="237" font-size="15" fill="#333">L/h</text>
+      <rect x="15" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="84" y="295" text-anchor="middle" font-size="14" fill="#fff">取消警报</text>
+      <rect x="327" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="396" y="295" text-anchor="middle" font-size="14" fill="#fff">返回主页</text>
+    </svg>
+    <div class="cap">图 4-2　正压运行界面</div>
+  </div>
+  <ul>
+    <li><strong>顶栏</strong>：实时显示「进气 / 排气 / 送电 / 警报」状态；</li>
+    <li><strong>柜内温度</strong>：PT100 实测柜温；</li>
+    <li><strong>柜内压力</strong>：实时柜内正压值；</li>
+    <li><strong>状态框</strong>：显示「柜内压力正常 / 柜内压力低 / 柜内压力高 / 系统运行中」；</li>
+    <li><strong>压力正常值</strong>：显示设定好的压力允许区间；</li>
+    <li><strong>流失流量</strong>：每 30s 自动滚动测得的柜体流失流量（单位 L/h）。</li>
+  </ul>
+
+  <h3>4.3 系统设置菜单</h3>
+  <div class="figure">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" font-family="Microsoft YaHei, sans-serif">
+      <rect x="0" y="0" width="480" height="320" fill="#ffffff"/>
+      <text x="24" y="26" font-size="17" font-weight="bold" fill="#333">系统设置</text>
+      <rect x="20" y="45" width="150" height="34" rx="6" fill="#3a3a3c"/>
+      <text x="36" y="67" font-size="15" fill="#fff">修改密码</text>
+      <polygon points="176,55 176,69 184,62" fill="#555"/>
+      <rect x="20" y="87" width="150" height="34" rx="6" fill="#fff"/>
+      <text x="36" y="109" font-size="15" fill="#333">校准传感器</text>
+      <rect x="20" y="129" width="150" height="34" rx="6" fill="#fff"/>
+      <text x="36" y="151" font-size="15" fill="#333">设置参数</text>
+      <rect x="20" y="171" width="150" height="34" rx="6" fill="#fff"/>
+      <text x="36" y="193" font-size="15" fill="#333">恢复出厂</text>
+      <rect x="15" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="84" y="295" text-anchor="middle" font-size="14" fill="#fff">返回主页</text>
+      <rect x="171" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="240" y="295" text-anchor="middle" font-size="14" fill="#fff">下一选项</text>
+      <rect x="327" y="270" width="138" height="40" rx="6" fill="#3a3a3c"/>
+      <text x="396" y="295" text-anchor="middle" font-size="14" fill="#fff">确认</text>
+    </svg>
+    <div class="cap">图 4-3　系统设置菜单</div>
+  </div>
+  <table>
+    <tr><th>菜单项</th><th>功能</th></tr>
+    <tr><td>修改密码</td><td>修改进入系统设置/调试的密码</td></tr>
+    <tr><td>校准传感器</td><td>对温度、压力进行零点/量程校准</td></tr>
+    <tr><td>设置参数</td><td>修改压力、温度、换气时间、流量量程等</td></tr>
+    <tr><td>恢复出厂</td><td>恢复全部默认参数与默认密码</td></tr>
+  </table>
+
+  <h3>4.4 按键通用规则</h3>
+  <table>
+    <tr><th>按键</th><th>短按</th><th>长按（3 秒）</th></tr>
+    <tr><td>KEY1</td><td>确认 / 值加 1 / 消音</td><td>返回主页</td></tr>
+    <tr><td>KEY2</td><td>下一选项 / 下一位</td><td>放弃修改</td></tr>
+    <tr><td>KEY3</td><td>进入 / 确认 / 下一项</td><td>保存 / 恢复出厂</td></tr>
+  </table>
+
+  <!-- 五 -->
+  <h2>五、操作指南</h2>
+
+  <h3>5.1 开机</h3>
+  <p>接通电源，系统上电自检并显示开机动画（约 3 秒），随后进入主页面。屏幕长时间无操作会进入息屏，按任意键唤醒。</p>
+
+  <h3>5.2 正压启动</h3>
+  <div class="figure">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 560" font-family="Microsoft YaHei, sans-serif">
+      <defs>
+        <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6 z" fill="#555"/>
+        </marker>
+      </defs>
+      <rect x="0" y="0" width="560" height="560" fill="#f7f9fb"/>
+      <text x="280" y="32" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a1a1a">正压启动操作流程</text>
+      <rect x="180" y="52" width="200" height="42" rx="8" fill="#1b6fd0"/>
+      <text x="280" y="78" text-anchor="middle" font-size="14" fill="#fff">上电开机（自检）</text>
+      <line x1="280" y1="94" x2="280" y2="124" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="180" y="126" width="200" height="42" rx="8" fill="#1b6fd0"/>
+      <text x="280" y="152" text-anchor="middle" font-size="14" fill="#fff">主页按「正压启动」</text>
+      <line x1="280" y1="168" x2="280" y2="198" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="180" y="200" width="200" height="42" rx="8" fill="#e8b339"/>
+      <text x="280" y="226" text-anchor="middle" font-size="14" fill="#fff">换气倒计时（默认 900s）</text>
+      <line x1="280" y1="242" x2="280" y2="272" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+      <polygon points="280,274 380,318 280,362 180,318" fill="#e8b339"/>
+      <text x="280" y="314" text-anchor="middle" font-size="13" fill="#fff">压力达到</text>
+      <text x="280" y="330" text-anchor="middle" font-size="13" fill="#fff">正常范围？</text>
+      <line x1="180" y1="318" x2="100" y2="318" stroke="#c0392b" stroke-width="2"/>
+      <line x1="100" y1="318" x2="100" y2="222" stroke="#c0392b" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="92" y="210" font-size="12" fill="#c0392b">否（继续换气）</text>
+      <line x1="280" y1="362" x2="280" y2="392" stroke="#2f855a" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="296" y="384" font-size="12" fill="#2f855a">是</text>
+      <rect x="180" y="394" width="200" height="42" rx="8" fill="#2f855a"/>
+      <text x="280" y="420" text-anchor="middle" font-size="14" fill="#fff">自动送电（接通负载）</text>
+      <line x1="280" y1="436" x2="280" y2="466" stroke="#555" stroke-width="2" marker-end="url(#ar)"/>
+      <rect x="150" y="468" width="260" height="54" rx="8" fill="#2f855a"/>
+      <text x="280" y="490" text-anchor="middle" font-size="14" fill="#fff">系统运行中</text>
+      <text x="280" y="510" text-anchor="middle" font-size="12" fill="#dff0e7">稳压控制 + 每30s流失流量自动监测</text>
+    </svg>
+    <div class="cap">图 5-1　正压启动流程</div>
+  </div>
+  <p>操作步骤：</p>
+  <ol>
+    <li>在主页面按 <strong>KEY1（正压启动）</strong>；</li>
+    <li>系统进入<strong>换气倒计时</strong>（默认 900 秒），期间自动控制进 / 排气阀对柜体进行吹扫换气；</li>
+    <li>倒计时结束且柜内压力达到设定正常范围后，系统<strong>自动送电</strong>接通负载；</li>
+    <li>进入「系统运行中」状态，持续稳压、报警监测，并每隔 30 秒自动测算流失流量；</li>
+    <li>运行中按 <strong>KEY3</strong> 可返回主页，按 <strong>KEY1</strong> 可对报警进行消音。</li>
+  </ol>
+
+  <h3>5.3 系统设置</h3>
+  <ol>
+    <li>主页面按 <strong>KEY2</strong>，输入密码（默认 555）后进入设置菜单；</li>
+    <li>按 <strong>KEY2</strong> 移动选中项，按 <strong>KEY3</strong> 进入；</li>
+    <li>按 <strong>KEY1</strong> 可返回主页。</li>
+  </ol>
+
+  <h3>5.4 修改密码</h3>
+  <ol>
+    <li>进入「修改密码」，用 <strong>KEY1</strong> 加值、<strong>KEY2</strong> 移动位、<strong>KEY3</strong> 确认；</li>
+    <li>长按 <strong>KEY3</strong> 保存，长按 <strong>KEY1</strong> 返回。</li>
+  </ol>
+
+  <h3>5.5 校准传感器</h3>
+  <p>在「校准传感器」中可分别校准温度和压力显示值：</p>
+  <ol>
+    <li>按 <strong>KEY1</strong> 加减数值、<strong>KEY2</strong> 移位、<strong>KEY3</strong> 切换校准项；</li>
+    <li>长按 <strong>KEY3</strong> 保存校准结果，长按 <strong>KEY2</strong> 放弃修改。</li>
+  </ol>
+
+  <h3>5.6 设置参数</h3>
+  <p>可设置以下 8 项参数（单位见「参数说明」）：</p>
+  <p>压力下限 → 压力下下限 → 压力上限 → 压力上上限 → 温度上限 → 换气时间 → 流量量程 → 柜体容积</p>
+  <p>操作：<strong>KEY1</strong> 加值、<strong>KEY2</strong> 移位、<strong>KEY3</strong> 切换下一项；长按 <strong>KEY3</strong> 保存，长按 <strong>KEY2</strong> 放弃。</p>
+
+  <h3>5.7 系统调试</h3>
+  <div class="danger"><strong>危险！</strong>调试模式会在现场直接送电，请务必确认危险区域无人、环境安全后方可操作。</div>
+  <ol>
+    <li>主页面按 <strong>KEY3</strong>，输入密码进入调试页；</li>
+    <li>阅读红色安全提示后，按 <strong>KEY3（确认调试）</strong>；</li>
+    <li>系统强制送电，屏幕显示实时压力、温度；</li>
+    <li>调试完毕按 <strong>KEY3（调试结束）</strong> 退出。</li>
+  </ol>
+
+  <!-- 六 -->
+  <h2>六、参数说明</h2>
+  <table>
+    <tr><th>参数</th><th>含义</th><th>单位</th></tr>
+    <tr><td>压力下限</td><td>柜压低于此值开始补气</td><td>Pa</td></tr>
+    <tr><td>压力下下限</td><td>柜压低于此值触发报警/欠压保护</td><td>Pa</td></tr>
+    <tr><td>压力上限</td><td>柜压高于此值开始排气泄压</td><td>Pa</td></tr>
+    <tr><td>压力上上限</td><td>柜压高于此值触发报警</td><td>Pa</td></tr>
+    <tr><td>温度上限</td><td>柜温超过此值触发报警</td><td>℃</td></tr>
+    <tr><td>换气时间</td><td>正压启动吹扫倒计时时长</td><td>s</td></tr>
+    <tr><td>流量量程</td><td>进气流量计满量程（备用通道）</td><td>m³/h</td></tr>
+    <tr><td>柜体容积</td><td>柜体密闭容积，用于流失流量计算</td><td>L</td></tr>
+  </table>
+
+  <!-- 七 -->
+  <h2>七、流失流量监测说明</h2>
+  <p>流失流量用于量化柜体的密封性 / 泄漏程度，采用<strong>压力衰减法</strong>测量：</p>
+  <ul>
+    <li><strong>测量时机</strong>：仅在柜体处于稳定状态（进 / 排气阀都关闭）时自动进行，不影响正常稳压；</li>
+    <li><strong>测量周期</strong>：每 30 秒自动结算并刷新一次；</li>
+    <li><strong>计算方式</strong>：</li>
+  </ul>
+  <div class="formula">流失流量(L/h) = 8.275 × 压降(Pa) / 时间(s) × 293.15 / (273.15 + 柜温℃)</div>
+  <ul>
+    <li><strong>温度修正</strong>：使用 PT100 实测柜温自动修正（工作温度 -50~120℃）；</li>
+    <li><strong>前提</strong>：计算结果依赖于柜体密闭容积，该容积可在「系统设置 → 设置参数 → 柜体容积」中按实际柜体填写（单位 L，默认 250L = 0.25 m³）；若测量期间柜门开启，结果会偏差。</li>
+  </ul>
+
+  <!-- 八 -->
+  <h2>八、报警与保护</h2>
+  <table>
+    <tr><th>情况</th><th>动作</th></tr>
+    <tr><td>柜压低于下下限或高于上上限</td><td>声光报警</td></tr>
+    <tr><td>柜压低于下下限持续 10 秒</td><td>自动切断送电（欠压断电保护）</td></tr>
+    <tr><td>柜温超过上限</td><td>声光报警</td></tr>
+    <tr><td>温度 / 压力传感器断线或超程</td><td>声光报警</td></tr>
+    <tr><td>换气时间内压力不能恢复</td><td>压力恢复超时报警</td></tr>
+  </table>
+  <p>报警解除后，蜂鸣器可按 <strong>KEY1</strong> 消音；故障排除且参数恢复正常后报警自动复位。</p>
+
+  <!-- 九 -->
+  <h2>九、安全须知</h2>
+  <ol>
+    <li>本设备属于防爆场合用电气装置，安装、接线、调试必须由具备相应资质的专业人员进行；</li>
+    <li>设备通电运行前，确认柜门关闭、防爆面完好、所有紧固件齐全；</li>
+    <li>系统处于报警或欠压断电状态时，应先排查故障原因，严禁直接屏蔽报警继续使用；</li>
+    <li>压力、温度传感器量程应与柜体实际工况匹配；</li>
+    <li>更改参数、密码后请核对无误再投入运行，重要参数改动可能影响防爆保护功能。</li>
+  </ol>
+
+  <!-- 十 -->
+  <h2>十、常见问题</h2>
+  <table>
+    <tr><th>现象</th><th>可能原因</th><th>处理</th></tr>
+    <tr><td>无法进入设置/调试</td><td>密码错误</td><td>使用默认密码 555 或万能密码 995</td></tr>
+    <tr><td>柜压始终偏低</td><td>柜体泄漏 / 进气管堵塞</td><td>检查密封性与气源</td></tr>
+    <tr><td>流失流量显示明显偏大</td><td>柜门未关严或含其他开口</td><td>检查柜体密闭性</td></tr>
+    <tr><td>报警不响</td><td>处于消音状态 / 蜂鸣器故障</td><td>检查消音状态或硬件</td></tr>
+    <tr><td>屏幕息屏无显示</td><td>进入省电息屏</td><td>按任意键唤醒</td></tr>
+  </table>
+
+  <div class="footer">本说明书最终解释权归谷子防爆电气有限公司所有。</div>
+
+</div>
+</body>
+</html>
