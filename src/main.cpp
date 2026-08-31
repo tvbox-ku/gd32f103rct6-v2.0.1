@@ -76,7 +76,7 @@ static float flowVal = 0.0f;
 // ====== 流量显示：每1秒采集一次压差算进出流量，滚动循环 ======
 // 标签随压力变化方向切换：0=实时流量(初始/未变化), 1=流进流量(压力上升), 2=流出流量(压力下降)
 // flowDisplayVal 始终为非负数值(绝对值)，单位 m³/h
-#define FLOW_MEASURE_MS 1000UL
+#define FLOW_MEASURE_MS 500UL
 static uint32_t flowMeasureStart = 0;
 static int32_t  flowMeasureStartPress = 0;
 static bool     flowMeasuring = false;
@@ -2106,7 +2106,7 @@ void loop() {
     calcAdc1();
     calcAdc2();
     flowVal = calcFlow();
-    // 每1秒采集一次压差算进出流量，滚动循环（正=进气，负=流出）
+    // 每500ms采集一次压差算进出流量，滚动循环（正=进气，负=流出）
     if (!flowMeasuring) {
       flowMeasureStartPress = pressVal;
       flowMeasureStart = millis();
