@@ -75,12 +75,12 @@ static float tempVal = 0.0f;
 static float flowVal = 0.0f;
 // ====== 流量显示：每1秒采集一次压差算进出流量，滚动循环 ======
 // 标签随压力变化方向切换：0=实时流量(初始/未变化), 1=流进流量(压力上升), 2=流出流量(压力下降)
-// flowDisplayVal 始终为非负数值(绝对值)，单位 mL/min
+// flowDisplayVal 始终为非负数值(绝对值)，单位 m³/h
 #define FLOW_MEASURE_MS 1000UL
 static uint32_t flowMeasureStart = 0;
 static int32_t  flowMeasureStartPress = 0;
 static bool     flowMeasuring = false;
-static float flowDisplayVal = 0.0f;   // 当前界面显示的流量值(mL/min，非负)
+static float flowDisplayVal = 0.0f;   // 当前界面显示的流量值(m³/h，非负)
 static uint8_t flowLabelMode = 0;     // 0=实时流量, 1=流进流量, 2=流出流量
 static bool tempSensorAbnormal = false;
 static bool pressSensorAbnormal = false;
@@ -192,6 +192,15 @@ static inline uint16_t adcReadChannel(uint8_t ch) {
   uint32_t t = 500000;
   while (!(ADC1->SR & ADC_SR_EOC) && --t);
   return ADC1->DR;
+}
+// 16 次采样取平均：用于校准基准、恢复出厂等关键采点，避免单次采样受噪声/干扰影响
+static inline uint16_t adcReadAvg(uint8_t ch) {
+  uint32_t sum = 0;
+  for (int i = 0; i < 16; i++) {
+    sum += adcReadChannel(ch);
+    for (volatile int j = 0; j < 200; j++) __NOP();  // 两次转换之间留出稳定时间
+  }
+  return (uint16_t)(sum / 16);
 }
 
 // ====== 蜂鸣器 ======
@@ -327,20 +336,20 @@ void drawAsciiString24(const char* str, int x, int y, uint16_t color) {
 
 // ====== 流量单位 m³/h 绘制（3 为 m 右上角上标） ======
 void drawFlowUnit(int x, int y, uint16_t color) {
-  drawAsciiChar24('m', x+5, y, color, 1.0f);          // m
-  drawAsciiChar24('L', x + 17, y, color, 1.0f);       // L
-  drawAsciiChar24('/', x + 29, y, color, 1.0f);       // /
-  drawAsciiChar24('m', x + 41, y, color, 1.0f);       // m
-  drawAsciiChar24('i', x + 53, y, color, 1.0f);       // i
-  drawAsciiChar24('n', x + 65, y, color, 1.0f);       // n
+  drawAsciiChar24('m', x, y, color, 1.0f);             // m
+  drawAsciiChar24('3', x + 13, y - 4, color, 0.55f); // 上标 3
+  drawAsciiChar24('/', x + 20, y, color, 1.0f);        // /
+  drawAsciiChar24('h', x + 32, y, color, 1.0f);        // h
 }
 
-// ====== 流量数值绘制（mL/min，非负） ======
+// ====== 流量数值绘制（m³/h，保留2位小数） ======
 void drawFlowValue(int x, int y, uint16_t color) {
   char buf[16];
   float v = flowDisplayVal < 0 ? 0 : flowDisplayVal;
-  int iv = (int)(v + 0.5f);
-  snprintf(buf, sizeof(buf), "%d", iv);
+  int iv = (int)v;
+  int dec = (int)((v - (float)iv) * 100.0f + 0.5f);
+  if (dec >= 100) { iv += 1; dec = 0; }
+  snprintf(buf, sizeof(buf), "%d.%02d", iv, dec);
   drawAsciiString24(buf, x, y, color);
   drawFlowUnit(x + strlen(buf) * 12 + 4, y, color);
 }
@@ -375,6 +384,7 @@ void drawLeakValue(int x, int y, uint16_t color) {
 
 // ====== 压力/温度计算 ======
 static float filteredPressRaw = -1.0f; // 低通滤波历史缓冲区 (-1 表示未初始化)
+static float filteredTempRaw = -1.0f;
 static float filteredAdc1Raw = -1.0f;
 static float filteredAdc2Raw = -1.0f;
 
@@ -393,7 +403,7 @@ float calcDisplayPress() {
   if (filteredPressRaw < 0.0f) {
     filteredPressRaw = currentRaw;
   } else {
-    const float alpha = 0.12f; 
+    const float alpha = 0.35f; 
     filteredPressRaw = filteredPressRaw * (1.0f - alpha) + currentRaw * alpha;
   }
 
@@ -401,9 +411,25 @@ float calcDisplayPress() {
   return (v < 0) ? 0 : v;
 }
 float calcDisplayTemp() {
-  int t = adcReadChannel(TEMP_ADC_CH);
-  tempSensorAbnormal = (t <= 5 || t >= 4090);
-  return calibTempVal + (float)(t - calibTempRaw) * TEMP_COEFF * 3.3f / 4095.0f * 1000.0f;
+  int sum = 0, n = 16;
+  int minRaw = 4095, maxRaw = 0;
+  for (int i = 0; i < n; i++) {
+    int raw = adcReadChannel(TEMP_ADC_CH);
+    sum += raw;
+    if (raw < minRaw) minRaw = raw;
+    if (raw > maxRaw) maxRaw = raw;
+  }
+  float currentRaw = (float)sum / n;
+  tempSensorAbnormal = (minRaw <= 5 || maxRaw >= 4090);
+
+  if (filteredTempRaw < 0.0f) {
+    filteredTempRaw = currentRaw;
+  } else {
+    const float alpha = 0.12f;
+    filteredTempRaw = filteredTempRaw * (1.0f - alpha) + currentRaw * alpha;
+  }
+
+  return calibTempVal + (filteredTempRaw - calibTempRaw) * TEMP_COEFF * 3.3f / 4095.0f * 1000.0f;
 }
 float calcAdc1() {
   int sum = 0, n = 16;
@@ -1018,7 +1044,7 @@ void updatePressureScreen() {
 
   // ---------- 流量标签+数值刷新（运行布局 y=216 / 倒计时布局 y=248） ----------
   int flowY = showDisplay ? 216 : 248;
-  int32_t flowKey = (int32_t)(flowDisplayVal * 1000.0f);
+  int32_t flowKey = (int32_t)(flowDisplayVal * 100.0f);
   // 标签模式变化时重画标签（"实时/流进/流出流量:" 宽度一致，清标签区域后重画）
   if (lastFlowLabelMode != flowLabelMode) {
     tft.fillRect(20, flowY, 175, 28, TFT_WHITE);
@@ -1200,7 +1226,7 @@ void updateDebugConfirmScreen() {
   drawAsciiString24(buf, 170, 200, TFT_BLACK);
   static uint8_t lastDbgFlowLabel = 255;
   static int32_t lastDbgFlowVal = -1000000;
-  int32_t flowKey = (int32_t)(flowDisplayVal * 1000.0f);
+  int32_t flowKey = (int32_t)(flowDisplayVal * 100.0f);
   if (lastDbgFlowLabel != flowLabelMode) {
     tft.fillRect(20, 242, 145, 28, TFT_WHITE);
     drawMixedString(getFlowLabel(), 30, 242, TFT_BLACK, 1.0f);
@@ -1532,10 +1558,10 @@ void saveCalibration(int32_t tempRaw, int32_t pressRaw, float tempOffset, float 
 
 void loadCalibration() {
     if (!flashLoadAll()) {
-        calibTempRaw = adcReadChannel(TEMP_ADC_CH);
-        calibPressRaw = adcReadChannel(PRESS_ADC_CH);
-        calibAdc1Raw = adcReadChannel(ADC1_CH);
-        calibAdc2Raw = adcReadChannel(ADC2_CH);
+        calibTempRaw = adcReadAvg(TEMP_ADC_CH);
+        calibPressRaw = adcReadAvg(PRESS_ADC_CH);
+        calibAdc1Raw = adcReadAvg(ADC1_CH);
+        calibAdc2Raw = adcReadAvg(ADC2_CH);
         calibTempVal = 26.0f;
         calibPressVal = 0.0f;
         calibAdc1Val = 0.0f;
@@ -1640,8 +1666,8 @@ void processKeys() {
     if (mode == 4) { beep(2); targetPassword = inputPwd; saveSysParams(); tft.fillRect(60, 100, 360, 50, TFT_BLACK); tft.drawRect(60, 100, 360, 50, TFT_WHITE); drawMixedString("密码已修改", 160, 115, TFT_GREEN, 1.5f); delay(1500); mode = 2; drawScreen(); }
     if (mode == 5) {
       beep(2);
-      int currentTempAdc = adcReadChannel(TEMP_ADC_CH);
-      int currentPressAdc = adcReadChannel(PRESS_ADC_CH);
+      int currentTempAdc = adcReadAvg(TEMP_ADC_CH);
+      int currentPressAdc = adcReadAvg(PRESS_ADC_CH);
       float tempCoeff = TEMP_COEFF * 3.3f / 4095.0f * 1000.0f;
       calibPressVal = calibEditPress - (currentPressAdc - calibPressRaw) * PRESS_SLOPE;
       calibTempVal = calibEditTemp - (currentTempAdc - calibTempRaw) * tempCoeff;
@@ -1669,13 +1695,14 @@ void processKeys() {
       for (int i = 0; i < 8; i++) sysParams[i] = DEFAULT_SYSPARAMS[i];
       targetPassword = DEFAULT_PASSWORD;
       filteredPressRaw = -1.0f;
+      filteredTempRaw = -1.0f;
       filteredAdc1Raw = -1.0f;
       filteredAdc2Raw = -1.0f;
       filteredFlowRaw = -1.0f;
-      calibTempRaw = adcReadChannel(TEMP_ADC_CH);
-      calibPressRaw = adcReadChannel(PRESS_ADC_CH);
-      calibAdc1Raw = adcReadChannel(ADC1_CH);
-      calibAdc2Raw = adcReadChannel(ADC2_CH);
+      calibTempRaw = adcReadAvg(TEMP_ADC_CH);
+      calibPressRaw = adcReadAvg(PRESS_ADC_CH);
+      calibAdc1Raw = adcReadAvg(ADC1_CH);
+      calibAdc2Raw = adcReadAvg(ADC2_CH);
       calibTempVal = 0.0f;
       calibPressVal = 0.0f;
       calibAdc1Val = 0.0f;
@@ -2100,7 +2127,7 @@ void loop() {
       if (cabinetVolM3 < 0.05f) cabinetVolM3 = (float)DEFAULT_CABINET_VOLUME_L / 1000.0f;
       float leakCoeff = 33.1f * cabinetVolM3;
       float flowLph = leakCoeff * (float)absDP / (FLOW_MEASURE_MS / 1000.0f) * tempFactor;
-      flowDisplayVal = flowLph * 1000.0f / 60.0f;  // L/h → mL/min，非负
+      flowDisplayVal = flowLph / 1000.0f;  // L/h → m³/h，非负
       flowMeasuring = false;
     }
     updateLeakMeasure();
