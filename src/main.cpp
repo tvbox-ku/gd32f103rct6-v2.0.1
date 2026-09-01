@@ -562,8 +562,8 @@ void drawBtn(int idx, const char* label, uint16_t color) {
 void updateGlobalAlarmState() {
     if (!systemActive) return;
 
-    // 压力恢复超时报警（即使倒计时未结束也触发）
-    if (recoveryTimeoutAlarm) {
+    // 压力恢复超时报警（仅倒计时结束后才触发，换气期间不报警）
+    if (recoveryTimeoutAlarm && countdownRemain == 0) {
         globalAlarm = true;
         if (!muteOn) digitalWrite(ALARM_RELAY, HIGH);
         return;
@@ -974,7 +974,7 @@ void updatePressureScreen() {
       drawMixedString(getFlowLabel(), 20, 216, TFT_BLACK, 1.0f);
       drawFlowValue(200, 216, TFT_BLACK);
 
-      tft.fillRect(20, 248, 300, 28, TFT_WHITE);   // 清掉上一布局(倒计时)留在 248 的流量行
+      tft.fillRect(20, 240, 300, 36, TFT_WHITE);   // 清掉上一布局(倒计时)留在 248 的流量行（含上标3上半部分）
       lastCountdown = -1;
       lastLeakDisp = -9999;
     } else {
@@ -1853,20 +1853,24 @@ void processKeys() {
         drawScreen();
       }
       else if (mode == 1) {
+        // 返回主界面：停止一切正压逻辑，关闭所有继电器
         inPositiveMode = false;
-        if (countdownRemain > 0) {
-          systemActive = false;
-          countdownRemain = 0;
-          recoveryTimeoutTimer = 0;
-          recoveryTimeoutAlarm = false;
-          digitalWrite(INLET_RELAY, LOW);
-          digitalWrite(EXHAUST_RELAY, LOW);
-          mode = 0;
-          drawScreen();
-        } else {
-          mode = 0;
-          drawScreen();
-        }
+        systemActive = false;
+        countdownRemain = 0;
+        recoveryTimeoutTimer = 0;
+        recoveryTimeoutAlarm = false;
+        globalAlarm = false;
+        muteOn = false;
+        powerOnDelivered = false;
+        systemRunningNormal = false;
+        powerTripLatched = false;
+        underPressureTimer = 0;
+        digitalWrite(POWER_RELAY, LOW);
+        digitalWrite(INLET_RELAY, LOW);
+        digitalWrite(EXHAUST_RELAY, LOW);
+        digitalWrite(ALARM_RELAY, LOW);
+        mode = 0;
+        drawScreen();
       }
       else if (mode == 2) {
         switch (settingsSel) {
@@ -2134,11 +2138,11 @@ void loop() {
     }
     updateLeakMeasure();
 
-    if (systemActive) {
+    if (systemActive && mode == 1) {
         updateGlobalAlarmState();
     }
 
-    if (systemActive && mode != 7) {
+    if (systemActive && mode == 1) {
         updatePressureControl();
     }
 
