@@ -3,7 +3,7 @@
  *
  * 引脚: PB0-PB15=TFT_D0-D15, PA2=DC, PA4=CS, PA5=WR, PA3=RD, PA1=RST
  * 按键: PC7=KEY1, PC8=KEY2, PC9=KEY3, PA12=蜂鸣器
- * 继电器: PC0=排气, PC1=警报, PC2=进气, PC3=送电
+ * 继电器: PC1=送电, PC0=进气, PC12=警报, PD2=排气
  * ADC: PC5=温度(ADC15), PC4=压力(ADC14), PC2=流量(ADC12, 风压变送器4-20mA), PC3=备用(ADC13)
  */
 
@@ -21,7 +21,7 @@ void drawLogo(int x, int y) {
   tft.pushImage(x, y, LOGO_W, LOGO_H, logoBitmap);
 }
 
-// 使用 HAL_FLASH 标准 API 读写 Flash（参考 E:\\main.cpp 稳定实现）
+// 使用 HAL_FLASH 标准 API 读写 Flash
 #define FLASH_SAVE_ADDR 0x0803F800
 #define FLASH_MAGIC 0xA5E5
 TFT_eSPI tft = TFT_eSPI();
@@ -350,6 +350,8 @@ void drawFlowValue(int x, int y, uint16_t color) {
   int dec = (int)((v - (float)iv) * 100.0f + 0.5f);
   if (dec >= 100) { iv += 1; dec = 0; }
   snprintf(buf, sizeof(buf), "%d.%02d", iv, dec);
+  // 先清除整个数值+单位区域，避免位数变化时单位 m³/h 残影
+  tft.fillRect(x, y - 8, 140, 32, TFT_WHITE);
   drawAsciiString24(buf, x, y, color);
   drawFlowUnit(x + strlen(buf) * 12 + 4, y, color);
 }
