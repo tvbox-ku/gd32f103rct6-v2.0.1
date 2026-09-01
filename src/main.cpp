@@ -584,10 +584,11 @@ void updateGlobalAlarmState() {
 }
 
 static void applyCountdownVentilation(int pressure) {
-  if (pressure < sysParams[1]) {
+  // 换气倒计时期间：仅当压力在正常值范围[下限,上限]内才同时进气+排气
+  if (pressure < sysParams[0]) {
     digitalWrite(INLET_RELAY, HIGH);
     digitalWrite(EXHAUST_RELAY, LOW);
-  } else if (pressure > sysParams[3]) {
+  } else if (pressure > sysParams[2]) {
     digitalWrite(INLET_RELAY, LOW);
     digitalWrite(EXHAUST_RELAY, HIGH);
   } else {
