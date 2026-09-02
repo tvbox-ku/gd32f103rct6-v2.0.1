@@ -958,7 +958,7 @@ void drawPressureScreen() {
       statusColor = TFT_DARKGREEN;
     } else {
       statusText = "柜内压力正常";
-      statusColor = TFT_GREEN;
+      statusColor = TFT_DARKGREEN;
     }
   }
 
@@ -1089,7 +1089,7 @@ void updatePressureScreen() {
       currentState = 3;
     } else {
       statusText = "柜内压力正常";
-      statusColor = TFT_GREEN;
+      statusColor = TFT_DARKGREEN;
       currentState = 0;
     }
   }
