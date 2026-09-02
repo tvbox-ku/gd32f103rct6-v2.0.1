@@ -11,6 +11,8 @@
 #include "my_font.h"
 #include "title_font_32.h"
 #include "ascii_font_24.h"
+#include "ascii_font_20.h"
+#include "font_20.h"
 #include "logo_bitmap.h"
 
 extern TFT_eSPI tft;
@@ -119,7 +121,14 @@ static bool recoveryTimeoutAlarm = false;   // 压力恢复超时报警标记
 
 // ====== 压力滞后防抖 ======
 #define PRESS_HYSTERESIS 15      // 滞后范围（Pa）
+#define UNDER_EXIT_PCT  60    // 补气解除点：下限+60%×(上限-下限)（倒计时与运行稳压共用）
+#define OVER_EXIT_PCT   50    // 排气解除点：下限+50%×(上限-下限)（倒计时与运行稳压共用）
+#define RECOVERY_TIMEOUT_MS 10000 // 换气结束后压力恢复超时（毫秒），独立于换气时间参数
 static int32_t lastPressState = 0; // 0=正常, -1=低, 1=高
+
+// ====== 运行时间（秒），倒计时结束后每秒递增，右上角显示 ======
+static uint32_t runElapsedSec = 0;          // 运行时长（秒）
+static uint32_t runTimer = 0;               // 运行计时基准
 
 // ====== 校准 ======
 static float calibTempVal = 0.0f, calibPressVal = 0.0f;
@@ -331,6 +340,102 @@ void drawAsciiString24(const char* str, int x, int y, uint16_t color) {
   for (int i = 0; str[i]; i++) {
     drawAsciiChar24(str[i], cx, y, color);
     cx += 12;
+  }
+}
+
+// ====== 20x20 中文字体绘制（用于右上角运行时间显示） ======
+void drawChineseChar20(const char* ch, int x, int y, uint16_t color) {
+  for (int i = 0; i < FONT_20_COUNT; i++) {
+    if (strcmp(font_20[i].index, ch) == 0) {
+      for (int row = 0; row < 20; row++) {
+        int runStart = -1;
+        for (int col = 0; col <= 20; col++) {
+          bool pixelOn = false;
+          if (col < 20) {
+            int byteIdx = row * 3 + col / 8;
+            pixelOn = (font_20[i].matrix[byteIdx] & (0x01 << (col % 8))) != 0;
+          }
+          if (pixelOn) {
+            if (runStart < 0) runStart = col;
+          } else {
+            if (runStart >= 0) {
+              tft.fillRect(x + runStart, y + row, col - runStart, 1, color);
+              runStart = -1;
+            }
+          }
+        }
+      }
+      return;
+    }
+  }
+}
+
+void drawAsciiChar20(char ch, int x, int y, uint16_t color) {
+  for (int i = 0; i < ASCII_20_COUNT; i++) {
+    if (font_ascii_20[i].ch == ch) {
+      for (int row = 0; row < 20; row++) {
+        int runStart = -1;
+        for (int col = 0; col <= 14; col++) {
+          bool pixelOn = false;
+          if (col < 14) {
+            int byteIdx = row * 2 + col / 8;
+            pixelOn = (font_ascii_20[i].matrix[byteIdx] & (0x01 << (col % 8))) != 0;
+          }
+          if (pixelOn) {
+            if (runStart < 0) runStart = col;
+          } else {
+            if (runStart >= 0) {
+              tft.fillRect(x + runStart, y + row, col - runStart, 1, color);
+              runStart = -1;
+            }
+          }
+        }
+      }
+      return;
+    }
+  }
+}
+
+void drawAsciiString20(const char* str, int x, int y, uint16_t color) {
+  int cx = x;
+  for (int i = 0; str[i]; i++) {
+    drawAsciiChar20(str[i], cx, y, color);
+    cx += 10;
+  }
+}
+
+// ====== 运行时间混合绘制：'d'→汉字"天"(步进22px)，其他→ASCII24(步进12px) ======
+void drawRunTimeStr(const char* str, int x, int y, uint16_t color) {
+  int cx = x;
+  for (int i = 0; str[i]; i++) {
+    if (str[i] == 'd') {
+      drawChineseChar20("天", cx, y + 1, color);
+      cx += 22;
+    } else {
+      drawAsciiChar24(str[i], cx, y, color);
+      cx += 12;
+    }
+  }
+}
+
+// ====== 运行时间格式化：<100h 用 HH:MM:SS，≥100h 用 DD天HH:MM，≥100d 用 DDD天HH:MM ======
+// 'd' 在字符串中作为"天"的占位符，绘制时用 drawRunTimeStr 替换为汉字"天"
+static void formatRunTime(char* buf, size_t len, uint32_t elapsedSec) {
+  if (elapsedSec < 360000) {
+    uint32_t h = elapsedSec / 3600;
+    uint32_t m = (elapsedSec % 3600) / 60;
+    uint32_t s = elapsedSec % 60;
+    snprintf(buf, len, "%02d:%02d:%02d", (int)h, (int)m, (int)s);
+  } else if (elapsedSec < 8640000) {
+    uint32_t d = elapsedSec / 86400;
+    uint32_t h = (elapsedSec % 86400) / 3600;
+    uint32_t m = (elapsedSec % 3600) / 60;
+    snprintf(buf, len, "%02dd%02d:%02d", (int)d, (int)h, (int)m);
+  } else {
+    uint32_t d = elapsedSec / 86400;
+    uint32_t h = (elapsedSec % 86400) / 3600;
+    uint32_t m = (elapsedSec % 3600) / 60;
+    snprintf(buf, len, "%03dd%02d:%02d", (int)d, (int)h, (int)m);
   }
 }
 
@@ -583,14 +688,45 @@ void updateGlobalAlarmState() {
     }
 }
 
+// 换气倒计时阶段通风控制：
+// 压力低于下限 → 只开进气；压力超过上限 → 只开排气；
+// 压力处于正常值范围[下限,上限]内 → 进气和排气同时执行（充分换气）
+// 滞后解除点按区间比例回落（自适应参数）：
+//   欠压补气 →补到 下限+60%×(上限-下限) 即恢复双开吹扫
+//   超压排气 →排到 下限+50%×(上限-下限) 即恢复双开吹扫
+static bool countdownOverPressure = false;  // 倒计时超压排气状态
+static bool countdownUnderPressure = false; // 倒计时欠压补气状态
+
+// 复位滞后状态：正压启动/退出/恢复出厂时调用，防止残留状态污染下一次换气
+static void resetCountdownVentilationState() {
+  countdownOverPressure = false;
+  countdownUnderPressure = false;
+}
+
 static void applyCountdownVentilation(int pressure) {
-  // 换气倒计时期间：仅当压力在正常值范围[下限,上限]内才同时进气+排气
-  if (pressure < sysParams[0]) {
-    digitalWrite(INLET_RELAY, HIGH);
-    digitalWrite(EXHAUST_RELAY, LOW);
-  } else if (pressure > sysParams[2]) {
+  int span = sysParams[2] - sysParams[0];                              // 压力区间宽度
+  int underExit = sysParams[0] + span * UNDER_EXIT_PCT / 100;          // 补气解除点(60%)
+  int overExit  = sysParams[0] + span * OVER_EXIT_PCT / 100;           // 排气解除点(50%)
+
+  if (pressure > sysParams[2]) {
+    countdownOverPressure = true;
+  } else if (pressure < sysParams[0]) {
+    countdownUnderPressure = true;
+  }
+
+  if (countdownOverPressure && pressure <= overExit) {
+    countdownOverPressure = false;
+  }
+  if (countdownUnderPressure && pressure >= underExit) {
+    countdownUnderPressure = false;
+  }
+
+  if (countdownOverPressure) {
     digitalWrite(INLET_RELAY, LOW);
     digitalWrite(EXHAUST_RELAY, HIGH);
+  } else if (countdownUnderPressure) {
+    digitalWrite(INLET_RELAY, HIGH);
+    digitalWrite(EXHAUST_RELAY, LOW);
   } else {
     digitalWrite(INLET_RELAY, HIGH);
     digitalWrite(EXHAUST_RELAY, HIGH);
@@ -602,11 +738,15 @@ void updatePressureControl() {
     if (!systemActive) return;
 
     int p = (int)pressVal;
-    static bool isFilling = false; 
+    static bool isFilling = false;
 
-    // ====== 关键：动态计算 50% 中点，不管数值多少 ======
-    int targetPressure = (sysParams[0] + sysParams[2]) / 2; 
-    // ===================================================
+    // ====== 运行稳压目标点（与倒计时阶段共用比例解除点） ======
+    // 补气补到 下限+60%×(上限-下限)；排气排到 下限+50%×(上限-下限)；
+    // 两者错开形成静止死区，压力落此区间时两阀均不动作，避免继电器频繁切换
+    int span = sysParams[2] - sysParams[0];
+    int underExit = sysParams[0] + span * UNDER_EXIT_PCT / 100;
+    int overExit  = sysParams[0] + span * OVER_EXIT_PCT / 100;
+    // =======================================================
 
     // --- 欠压 10 秒断电保护（始终运行，倒计时期间也需安全保护） ---
     if (p < sysParams[1]) {
@@ -624,15 +764,17 @@ void updatePressureControl() {
         powerTripLatched = false;
     }
 
-    // --- 压力恢复超时报警（换气时间内压力不能恢复到正常范围就报警） ---
-    if (p >= sysParams[0] && p <= sysParams[2]) {
-        recoveryTimeoutTimer = 0;
-        recoveryTimeoutAlarm = false;
-    } else if (!recoveryTimeoutAlarm) {
-        if (recoveryTimeoutTimer == 0) {
-            recoveryTimeoutTimer = millis();
-        } else if (millis() - recoveryTimeoutTimer >= (uint32_t)sysParams[5] * 1000) {
-            recoveryTimeoutAlarm = true;
+    // --- 压力恢复超时报警（仅换气倒计时结束后检测，倒计时期间不触发任何压力警报） ---
+    if (countdownRemain == 0) {
+        if (p >= sysParams[0] && p <= sysParams[2]) {
+            recoveryTimeoutTimer = 0;
+            recoveryTimeoutAlarm = false;
+        } else if (!recoveryTimeoutAlarm) {
+            if (recoveryTimeoutTimer == 0) {
+                recoveryTimeoutTimer = millis();
+            } else if (millis() - recoveryTimeoutTimer >= RECOVERY_TIMEOUT_MS) {
+                recoveryTimeoutAlarm = true;
+            }
         }
     }
 
@@ -654,22 +796,22 @@ void updatePressureControl() {
         isFilling = false;
     }
 
-    // 2. 处理泄压状态（排到 50% 中点即停止）
+    // 2. 处理泄压状态（排到 过压解除点 overExit 即停止）
     if (isExhausting) {
         digitalWrite(INLET_RELAY, LOW);
         digitalWrite(EXHAUST_RELAY, HIGH);
 
-        if (p <= targetPressure) {
+        if (p <= overExit) {
             isExhausting = false;
             digitalWrite(EXHAUST_RELAY, LOW);
         }
     }
-    // 3. 处理补气状态（补到 50% 中点即停止）
+    // 3. 处理补气状态（补到 补气解除点 underExit 即停止）
     else if (isFilling) {
         digitalWrite(INLET_RELAY, HIGH);
         digitalWrite(EXHAUST_RELAY, LOW);
 
-        if (p >= targetPressure) {
+        if (p >= underExit) {
             digitalWrite(INLET_RELAY, LOW);
             isFilling = false;
         }
@@ -745,6 +887,15 @@ void drawPressureScreen() {
   tft.fillScreen(TFT_WHITE);
   drawTopStatusBar();
   char buf[32];
+
+  // 右上角运行时间（运行阶段才显示，20号汉字标签 + 混合绘制数字）
+  if (systemRunningNormal) {
+    char rtBuf[16];
+    formatRunTime(rtBuf, sizeof(rtBuf), runElapsedSec);
+    drawChineseChar20("运", 300, 5, TFT_BLACK);
+    drawChineseChar20("行", 322, 5, TFT_BLACK);
+    drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
+  }
 
   // 判断是否触发锁定的条件（倒计时结束即切第二页，送电由独立压力逻辑保护）
   bool conditionMet = (countdownRemain == 0 && countdownDoneFirstRun);
@@ -1135,6 +1286,48 @@ void updatePressureScreen() {
     lastPowerBar = powerOnDelivered;
     lastInletBar = digitalRead(INLET_RELAY);
     lastExhaustBar = digitalRead(EXHAUST_RELAY);
+  }
+
+  // ---------- 右上角运行时间刷新（标签只画一次，数字只重画变化的字符） ----------
+  static int32_t lastRunSec = -1;
+  if (systemRunningNormal) {
+    char rtBuf[16];
+    formatRunTime(rtBuf, sizeof(rtBuf), runElapsedSec);
+    if (lastRunSec == -1) {
+      // 首次：清除整个区域 + 画标签 + 画数字
+      tft.fillRect(295, 2, 185, 28, TFT_WHITE);
+      drawChineseChar20("运", 300, 5, TFT_BLACK);
+      drawChineseChar20("行", 322, 5, TFT_BLACK);
+      drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
+    } else if (lastRunSec != (int32_t)runElapsedSec) {
+      char oldBuf[16];
+      formatRunTime(oldBuf, sizeof(oldBuf), (uint32_t)lastRunSec);
+      // 格式类型变化（含'd'状态不同或长度不同）→ 全量重画
+      bool oldHasD = strchr(oldBuf, 'd') != nullptr;
+      bool newHasD = strchr(rtBuf, 'd') != nullptr;
+      if (oldHasD != newHasD || strlen(oldBuf) != strlen(rtBuf)) {
+        tft.fillRect(295, 2, 185, 28, TFT_WHITE);
+        drawChineseChar20("运", 300, 5, TFT_BLACK);
+        drawChineseChar20("行", 322, 5, TFT_BLACK);
+        drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
+      } else {
+        // 同格式：逐字符比较，只重画变化的字符（步进随字符类型变化）
+        int cx = 350;
+        for (int i = 0; rtBuf[i]; i++) {
+          if (oldBuf[i] != rtBuf[i]) {
+            if (rtBuf[i] == 'd') {
+              drawChineseChar20("天", cx, 5, TFT_WHITE);
+              drawChineseChar20("天", cx, 5, TFT_BLACK);
+            } else {
+              drawAsciiChar24(oldBuf[i], cx, 4, TFT_WHITE);
+              drawAsciiChar24(rtBuf[i], cx, 4, TFT_BLACK);
+            }
+          }
+          cx += (rtBuf[i] == 'd') ? 22 : 12;
+        }
+      }
+    }
+    lastRunSec = (int32_t)runElapsedSec;
   }
 
   // ---------- 底部按钮 ----------
@@ -1702,6 +1895,9 @@ void processKeys() {
       filteredAdc1Raw = -1.0f;
       filteredAdc2Raw = -1.0f;
       filteredFlowRaw = -1.0f;
+      resetCountdownVentilationState();
+      runElapsedSec = 0;
+      runTimer = 0;
       calibTempRaw = adcReadAvg(TEMP_ADC_CH);
       calibPressRaw = adcReadAvg(PRESS_ADC_CH);
       calibAdc1Raw = adcReadAvg(ADC1_CH);
@@ -1747,6 +1943,9 @@ void processKeys() {
             underPressureTimer = 0;
             recoveryTimeoutTimer = 0;
             recoveryTimeoutAlarm = false;
+            resetCountdownVentilationState();
+            runElapsedSec = 0;
+            runTimer = 0;
             globalAlarm = false;
             muteOn = false;
             digitalWrite(ALARM_RELAY, LOW);
@@ -1866,6 +2065,9 @@ void processKeys() {
         systemRunningNormal = false;
         powerTripLatched = false;
         underPressureTimer = 0;
+        resetCountdownVentilationState();
+        runElapsedSec = 0;
+        runTimer = 0;
         digitalWrite(POWER_RELAY, LOW);
         digitalWrite(INLET_RELAY, LOW);
         digitalWrite(EXHAUST_RELAY, LOW);
@@ -2190,6 +2392,9 @@ void loop() {
       countdownRemain = sysParams[5];
       modeTimer = millis();
       sampleTimer = millis();
+      resetCountdownVentilationState();
+      runElapsedSec = 0;
+      runTimer = 0;
       applyCountdownVentilation((int)pressVal);
       countdownDoneFirstRun = false;
       // 重置流量测量：刚进入正压界面时标签显示"实时流量"，待压力发生变化后再切换
@@ -2218,6 +2423,8 @@ void loop() {
 
     if (countdownRemain == 0 && !countdownDoneFirstRun) {
         countdownDoneFirstRun = true;
+        runElapsedSec = 0;
+        runTimer = millis();
         digitalWrite(INLET_RELAY, LOW);
         digitalWrite(EXHAUST_RELAY, LOW);
         if ((int)pressVal >= sysParams[0] && !powerOnDelivered) {
@@ -2225,6 +2432,12 @@ void loop() {
             digitalWrite(POWER_RELAY, HIGH);
         }
         drawTopStatusBar();
+    }
+
+    // 运行时间计时（倒计时结束后每秒递增）
+    if (countdownDoneFirstRun && millis() - runTimer >= 1000) {
+        runTimer += 1000;
+        runElapsedSec++;
     }
 
     updatePressureScreen();
