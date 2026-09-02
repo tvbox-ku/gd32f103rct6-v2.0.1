@@ -1649,30 +1649,30 @@ void drawParamScreen() {
   for (int i = 0; i < 7; i++) paramEditVal[i] = sysParams[uiToSys[i]];
   paramLastSel = paramSel;
   for (int i = 0; i < 7; i++) {
-    int y = 28 + i * 26;
+    int y = 28 + i * 30;
     int val = (i == paramSel) ? paramEditVal[i] : sysParams[uiToSys[i]];
     if (i == paramSel) {
-      tft.fillRect(8, y - 2, 300, 32, COLOR_SPACEGREY);
-      tft.fillTriangle(10, y + 5, 10, y + 15, 18, y + 10, TFT_DARKGREY);
-      drawMixedString(labels[i], 24, y, TFT_WHITE, 1.0f);
+      tft.fillRect(8, y, 300, 28, COLOR_SPACEGREY);
+      tft.fillTriangle(10, y + 3, 10, y + 13, 18, y + 8, TFT_DARKGREY);
+      drawMixedString(labels[i], 24, y + 1, TFT_WHITE, 1.0f);
       char buf[8];
       snprintf(buf, sizeof(buf), "%04d", val);
       int xNum = 200;
       for (int d = 0; d < 4; d++) {
         char c[2] = {buf[d], 0};
         uint16_t color = (d == paramDpos) ? TFT_YELLOW : TFT_CYAN;
-        drawAsciiChar24(c[0], xNum + d * 14, y, color, 1.0f);
+        drawAsciiChar24(c[0], xNum + d * 14, y + 1, color, 1.0f);
       }
-      drawMixedString(units[i], 260, y, TFT_CYAN, 1.0f);
+      drawMixedString(units[i], 260, y + 1, TFT_CYAN, 1.0f);
       int triX = xNum + paramDpos * 14 + 4;
-      tft.fillTriangle(triX, y + 28, triX + 6, y + 28, triX + 3, y + 24, TFT_YELLOW);
+      tft.fillTriangle(triX, y + 24, triX + 6, y + 24, triX + 3, y + 20, TFT_YELLOW);
     } else {
-      tft.fillRect(8, y - 2, 300, 32, TFT_BLACK);
-      drawMixedString(labels[i], 24, y, TFT_WHITE, 1.0f);
+      tft.fillRect(8, y, 300, 28, TFT_BLACK);
+      drawMixedString(labels[i], 24, y + 1, TFT_WHITE, 1.0f);
       char buf[8];
       snprintf(buf, sizeof(buf), "%04d", val);
-      drawAsciiString24(buf, 200, y, TFT_CYAN);
-      drawMixedString(units[i], 260, y, TFT_CYAN, 1.0f);
+      drawAsciiString24(buf, 200, y + 1, TFT_CYAN);
+      drawMixedString(units[i], 260, y + 1, TFT_CYAN, 1.0f);
     }
   }
   int btnRow1Y = BTN_Y - BTN_H - BTN_GAP;
@@ -1700,18 +1700,18 @@ void updateParamScreen() {
   const char* units[]  = {"Pa", "Pa", "Pa", "Pa", "℃", "s", "L"};
   static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
   if (paramLastSel != paramSel) {
-    int oldY = 28 + paramLastSel * 26;
-    tft.fillRect(8, oldY - 2, 300, 32, TFT_BLACK);
-    drawMixedString(labels[paramLastSel], 24, oldY, TFT_WHITE, 1.0f);
+    int oldY = 28 + paramLastSel * 30;
+    tft.fillRect(8, oldY, 300, 28, TFT_BLACK);
+    drawMixedString(labels[paramLastSel], 24, oldY + 1, TFT_WHITE, 1.0f);
     char oldBuf[8];
     snprintf(oldBuf, sizeof(oldBuf), "%04d", (int)sysParams[uiToSys[paramLastSel]]);
-    drawAsciiString24(oldBuf, 200, oldY, TFT_CYAN);
-    drawMixedString(units[paramLastSel], 260, oldY, TFT_CYAN, 1.0f);
+    drawAsciiString24(oldBuf, 200, oldY + 1, TFT_CYAN);
+    drawMixedString(units[paramLastSel], 260, oldY + 1, TFT_CYAN, 1.0f);
   }
-  int newY = 28 + paramSel * 26;
-  tft.fillRect(8, newY - 2, 300, 32, COLOR_SPACEGREY);
-  tft.fillTriangle(10, newY + 5, 10, newY + 15, 18, newY + 10, TFT_DARKGREY);
-  drawMixedString(labels[paramSel], 24, newY, TFT_WHITE, 1.0f);
+  int newY = 28 + paramSel * 30;
+  tft.fillRect(8, newY, 300, 28, COLOR_SPACEGREY);
+  tft.fillTriangle(10, newY + 3, 10, newY + 13, 18, newY + 8, TFT_DARKGREY);
+  drawMixedString(labels[paramSel], 24, newY + 1, TFT_WHITE, 1.0f);
   int val = paramEditVal[paramSel];
   char buf[8];
   snprintf(buf, sizeof(buf), "%04d", val);
@@ -1719,11 +1719,11 @@ void updateParamScreen() {
   for (int d = 0; d < 4; d++) {
     char c[2] = {buf[d], 0};
     uint16_t color = (d == paramDpos) ? TFT_YELLOW : TFT_CYAN;
-    drawAsciiChar24(c[0], xNum + d * 14, newY, color, 1.0f);
+    drawAsciiChar24(c[0], xNum + d * 14, newY + 1, color, 1.0f);
   }
-  drawMixedString(units[paramSel], 260, newY, TFT_CYAN, 1.0f);
+  drawMixedString(units[paramSel], 260, newY + 1, TFT_CYAN, 1.0f);
   int triX = xNum + paramDpos * 14 + 4;
-  tft.fillTriangle(triX, newY + 28, triX + 6, newY + 28, triX + 3, newY + 24, TFT_YELLOW);
+  tft.fillTriangle(triX, newY + 24, triX + 6, newY + 24, triX + 3, newY + 20, TFT_YELLOW);
   paramLastSel = paramSel;
 }
 
