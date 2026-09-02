@@ -29,7 +29,7 @@ void drawLogo(int x, int y) {
 TFT_eSPI tft = TFT_eSPI();
 
 // ====== 硬件引脚 ======
-const uint8_t BEEP_PIN = PA12, KEY1_PIN = PC7, KEY2_PIN = PC8, KEY3_PIN = PC9;
+const uint8_t BEEP_PIN = PA0, KEY1_PIN = PC7, KEY2_PIN = PC8, KEY3_PIN = PC9;
 const uint8_t POWER_RELAY = PC1, INLET_RELAY = PC0, ALARM_RELAY = PC12, EXHAUST_RELAY = PD2;
 const uint8_t TEMP_ADC_PIN = PC5, PRESS_ADC_PIN = PC4;
 const uint8_t ADC1_PIN = PC2, ADC2_PIN = PC3;
@@ -409,7 +409,7 @@ void drawRunTimeStr(const char* str, int x, int y, uint16_t color) {
   int cx = x;
   for (int i = 0; str[i]; i++) {
     if (str[i] == 'd') {
-      drawChineseChar20("天", cx, y + 1, color);
+      drawChineseChar20(font_20[4].index, cx, y + 1, color);
       cx += 22;
     } else {
       drawAsciiChar24(str[i], cx, y, color);
@@ -892,8 +892,8 @@ void drawPressureScreen() {
   if (systemRunningNormal) {
     char rtBuf[16];
     formatRunTime(rtBuf, sizeof(rtBuf), runElapsedSec);
-    drawChineseChar20("运", 300, 5, TFT_BLACK);
-    drawChineseChar20("行", 322, 5, TFT_BLACK);
+    drawChineseChar20(font_20[0].index, 300, 5, TFT_BLACK);
+    drawChineseChar20(font_20[1].index, 322, 5, TFT_BLACK);
     drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
   }
 
@@ -1296,8 +1296,8 @@ void updatePressureScreen() {
     if (lastRunSec == -1) {
       // 首次：清除整个区域 + 画标签 + 画数字
       tft.fillRect(295, 2, 185, 28, TFT_WHITE);
-      drawChineseChar20("运", 300, 5, TFT_BLACK);
-      drawChineseChar20("行", 322, 5, TFT_BLACK);
+      drawChineseChar20(font_20[0].index, 300, 5, TFT_BLACK);
+      drawChineseChar20(font_20[1].index, 322, 5, TFT_BLACK);
       drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
     } else if (lastRunSec != (int32_t)runElapsedSec) {
       char oldBuf[16];
@@ -1307,8 +1307,8 @@ void updatePressureScreen() {
       bool newHasD = strchr(rtBuf, 'd') != nullptr;
       if (oldHasD != newHasD || strlen(oldBuf) != strlen(rtBuf)) {
         tft.fillRect(295, 2, 185, 28, TFT_WHITE);
-        drawChineseChar20("运", 300, 5, TFT_BLACK);
-        drawChineseChar20("行", 322, 5, TFT_BLACK);
+        drawChineseChar20(font_20[0].index, 300, 5, TFT_BLACK);
+        drawChineseChar20(font_20[1].index, 322, 5, TFT_BLACK);
         drawRunTimeStr(rtBuf, 350, 4, TFT_BLACK);
       } else {
         // 同格式：逐字符比较，只重画变化的字符（步进随字符类型变化）
@@ -1316,8 +1316,8 @@ void updatePressureScreen() {
         for (int i = 0; rtBuf[i]; i++) {
           if (oldBuf[i] != rtBuf[i]) {
             if (rtBuf[i] == 'd') {
-              drawChineseChar20("天", cx, 5, TFT_WHITE);
-              drawChineseChar20("天", cx, 5, TFT_BLACK);
+              drawChineseChar20(font_20[4].index, cx, 5, TFT_WHITE);
+              drawChineseChar20(font_20[4].index, cx, 5, TFT_BLACK);
             } else {
               drawAsciiChar24(oldBuf[i], cx, 4, TFT_WHITE);
               drawAsciiChar24(rtBuf[i], cx, 4, TFT_BLACK);
@@ -1328,6 +1328,11 @@ void updatePressureScreen() {
       }
     }
     lastRunSec = (int32_t)runElapsedSec;
+  } else {
+    if (lastRunSec != -1) {
+      tft.fillRect(295, 2, 185, 28, TFT_WHITE);
+      lastRunSec = -1;
+    }
   }
 
   // ---------- 底部按钮 ----------
@@ -2063,6 +2068,7 @@ void processKeys() {
         inPositiveMode = false;
         systemActive = false;
         countdownRemain = 0;
+        countdownDoneFirstRun = false;
         recoveryTimeoutTimer = 0;
         recoveryTimeoutAlarm = false;
         globalAlarm = false;
