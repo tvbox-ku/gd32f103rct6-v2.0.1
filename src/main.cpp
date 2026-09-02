@@ -864,7 +864,7 @@ void drawTopStatusBar() {
   if (exhaustOn) { tft.fillRect(x, 2, sw, sh, COLOR_SPACEGREY); drawMixedString("排气", x+10, 5, TFT_WHITE, 1.0f); }
   x += sw+gap;
   tft.fillRect(x, 2, sw, sh, TFT_WHITE);
-  if (powerOn) { tft.fillRect(x, 2, sw, sh, TFT_GREEN); drawMixedString("送电", x+10, 5, TFT_WHITE, 1.0f); }
+  if (powerOn) { tft.fillRect(x, 2, sw, sh, TFT_DARKGREEN); drawMixedString("送电", x+10, 5, TFT_WHITE, 1.0f); }
   x += sw+gap;
   drawAlarmStatus(x, 2, sw, sh);
 }
@@ -955,7 +955,7 @@ void drawPressureScreen() {
   } else {
     if (showDisplay && powerOnDelivered) {
       statusText = "系统运行中";
-      statusColor = TFT_GREEN;
+      statusColor = TFT_DARKGREEN;
     } else {
       statusText = "柜内压力正常";
       statusColor = TFT_GREEN;
@@ -1085,7 +1085,7 @@ void updatePressureScreen() {
     bool showDisplay = systemRunningNormal; 
     if (showDisplay && powerOnDelivered) {
       statusText = "系统运行中";
-      statusColor = TFT_GREEN;
+      statusColor = TFT_DARKGREEN;
       currentState = 3;
     } else {
       statusText = "柜内压力正常";
