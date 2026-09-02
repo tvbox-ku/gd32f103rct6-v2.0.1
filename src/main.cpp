@@ -1642,13 +1642,15 @@ void updateCalibScreen() {
 void drawParamScreen() {
   tft.fillScreen(TFT_BLACK);
   drawMixedString("设置参数", 5, 5, TFT_YELLOW, 1.0f);
-  const char* labels[] = {"压力下限", "压力下下限", "压力上限", "压力上上限", "温度上限", "换气时间", "流量量程", "柜体容积"};
-  const char* units[]  = {"Pa", "Pa", "Pa", "Pa", "℃", "s", "m3/h", "L"};
-  for (int i = 0; i < 8; i++) paramEditVal[i] = sysParams[i];
+  const char* labels[] = {"压力下限", "压力下下限", "压力上限", "压力上上限", "温度上限", "换气时间", "柜体容积"};
+  const char* units[]  = {"Pa", "Pa", "Pa", "Pa", "℃", "s", "L"};
+  // 界面 0..5 对应 sysParams[0..5]，界面 6(柜体容积) 对应 sysParams[7]（流量量程 sysParams[6] 不开放调节）
+  static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
+  for (int i = 0; i < 7; i++) paramEditVal[i] = sysParams[uiToSys[i]];
   paramLastSel = paramSel;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 7; i++) {
     int y = 28 + i * 26;
-    int val = (i == paramSel) ? paramEditVal[i] : sysParams[i];
+    int val = (i == paramSel) ? paramEditVal[i] : sysParams[uiToSys[i]];
     if (i == paramSel) {
       tft.fillRect(8, y - 2, 300, 32, COLOR_SPACEGREY);
       tft.fillTriangle(10, y + 5, 10, y + 15, 18, y + 10, TFT_DARKGREY);
@@ -1694,14 +1696,15 @@ void drawParamScreen() {
 // ====== 设置参数 局部更新 ======
 void updateParamScreen() {
   if (paramLastSel == 255) paramLastSel = paramSel;
-  const char* labels[] = {"压力下限", "压力下下限", "压力上限", "压力上上限", "温度上限", "换气时间", "流量量程", "柜体容积"};
-  const char* units[]  = {"Pa", "Pa", "Pa", "Pa", "℃", "s", "m3/h", "L"};
+  const char* labels[] = {"压力下限", "压力下下限", "压力上限", "压力上上限", "温度上限", "换气时间", "柜体容积"};
+  const char* units[]  = {"Pa", "Pa", "Pa", "Pa", "℃", "s", "L"};
+  static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
   if (paramLastSel != paramSel) {
     int oldY = 28 + paramLastSel * 26;
     tft.fillRect(8, oldY - 2, 300, 32, TFT_BLACK);
     drawMixedString(labels[paramLastSel], 24, oldY, TFT_WHITE, 1.0f);
     char oldBuf[8];
-    snprintf(oldBuf, sizeof(oldBuf), "%04d", (int)sysParams[paramLastSel]);
+    snprintf(oldBuf, sizeof(oldBuf), "%04d", (int)sysParams[uiToSys[paramLastSel]]);
     drawAsciiString24(oldBuf, 200, oldY, TFT_CYAN);
     drawMixedString(units[paramLastSel], 260, oldY, TFT_CYAN, 1.0f);
   }
@@ -1846,7 +1849,8 @@ void processKeys() {
     }
     if (mode == 6) {
       beep(2);
-      for (int i = 0; i < 8; i++) paramEditVal[i] = sysParams[i];
+      static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
+      for (int i = 0; i < 7; i++) paramEditVal[i] = sysParams[uiToSys[i]];
       paramDpos = 0;
       tft.fillRect(80, 120, 320, 60, TFT_BLACK);
       tft.drawRect(80, 120, 320, 60, TFT_WHITE);
@@ -1877,7 +1881,9 @@ void processKeys() {
     }
     if (mode == 6) {
       beep(2);
-      for (int i = 0; i < 8; i++) sysParams[i] = paramEditVal[i];
+      // 写回保存：界面 0..5 → sysParams[0..5]，界面 6(柜体容积) → sysParams[7]；流量量程 sysParams[6] 保持不变
+      static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
+      for (int i = 0; i < 7; i++) sysParams[uiToSys[i]] = paramEditVal[i];
       saveSysParams();
       tft.fillRect(80, 120, 320, 60, TFT_BLACK);
       tft.drawRect(80, 120, 320, 60, TFT_WHITE);
@@ -2103,7 +2109,7 @@ void processKeys() {
         updateCalibScreen();
       }
       else if (mode == 6) {
-        paramSel = (paramSel + 1) % 8;
+        paramSel = (paramSel + 1) % 7;
         paramDpos = 0;
         updateParamScreen();
       }
