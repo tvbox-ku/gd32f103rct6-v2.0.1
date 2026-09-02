@@ -1238,8 +1238,8 @@ void updatePressureScreen() {
                 textColor = TFT_WHITE;
             }
         } else {
-            // 正常状态：绿色稳定显示
-            backColor = TFT_GREEN;
+            // 正常状态：深绿色稳定显示
+            backColor = statusColor;
             textColor = TFT_WHITE;
         }
 
