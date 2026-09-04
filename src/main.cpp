@@ -14,6 +14,7 @@
 #include "ascii_font_20.h"
 #include "font_20.h"
 #include "logo_bitmap.h"
+#include "modbus_rtu.h"
 
 extern TFT_eSPI tft;
 void drawScreen();
@@ -333,6 +334,55 @@ void drawAsciiChar24(char ch, int x, int y, uint16_t color, float scale) {
       }
       return;
     }
+  }
+}
+
+// ====== 24x16 ASCII字符绘制（带Y方向裁剪，用于滚动动画） ======
+void drawAsciiChar24Clipped(char ch, int x, int y, uint16_t color, int clipY0, int clipY1) {
+  for (int i = 0; i < ASCII_24_COUNT; i++) {
+    if (font_ascii_24[i].ch == ch) {
+      for (int row = 0; row < 24; row++) {
+        int runStart = -1;
+        for (int col = 0; col <= 16; col++) {
+          bool pixelOn = false;
+          if (col < 16) {
+            int byteIdx = row * 2 + col / 8;
+            pixelOn = (font_ascii_24[i].matrix[byteIdx] & (0x01 << (col % 8))) != 0;
+          }
+          if (pixelOn) {
+            if (runStart < 0) runStart = col;
+          } else {
+            if (runStart >= 0) {
+              int offsetY = 0;
+              if (ch == '-') offsetY = 4;
+              else if (ch == '~') offsetY = 8;
+              int py = y + offsetY + row;
+              if (py >= clipY0 && py < clipY1) {
+                tft.fillRect(x + runStart, py, col - runStart, 1, color);
+              }
+              runStart = -1;
+            }
+          }
+        }
+      }
+      return;
+    }
+  }
+}
+
+// ====== 数字滚动切换动画（旧数字向上移出，新数字从下方移入） ======
+// 4帧×25ms=100ms，每帧移动6像素（24px/4帧）
+void drawDigitScroll(int x, int y, char oldCh, char newCh, uint16_t color, int charW, uint16_t bgColor) {
+  const int FRAMES = 4;
+  const int STEP = 6;
+  const int FRAME_MS = 25;
+  for (int f = 1; f <= FRAMES; f++) {
+    int oldY = y - f * STEP;
+    int newY = y + 24 - f * STEP;
+    tft.fillRect(x, y, charW, 24, bgColor);
+    drawAsciiChar24Clipped(oldCh, x, oldY, color, y, y + 24);
+    drawAsciiChar24Clipped(newCh, x, newY, color, y, y + 24);
+    delay(FRAME_MS);
   }
 }
 void drawAsciiString24(const char* str, int x, int y, uint16_t color) {
@@ -1002,7 +1052,7 @@ drawMixedString(statusText, centerX, 134, textColor, 1.0f);
   }
 
   // --- 底部按钮 ---
-  tft.fillRect(BTN_GAP, BTN_Y, BTN_W, BTN_H, globalAlarm ? TFT_RED : (muteOn ? TFT_YELLOW : TFT_DARKGREY));
+  tft.fillRect(BTN_GAP, BTN_Y, BTN_W, BTN_H, muteOn ? TFT_YELLOW : (globalAlarm ? TFT_RED : TFT_DARKGREY));
   drawMixedString(muteOn ? "取消消音" : "取消警报", BTN_GAP + 15, BTN_Y + 4, TFT_BLACK);
   tft.fillRect(BTN_GAP + 2 * (BTN_W + BTN_GAP), BTN_Y, BTN_W, BTN_H, TFT_DARKGREY);
   drawMixedString("返回主页", BTN_GAP + 2 * (BTN_W + BTN_GAP) + 20, BTN_Y + 4, TFT_WHITE);
@@ -1337,7 +1387,7 @@ void updatePressureScreen() {
 
   // ---------- 底部按钮 ----------
   if (lastMuteOn_Button != muteOn || lastGlobalAlarm_Button != globalAlarm) {
-    tft.fillRect(BTN_GAP, BTN_Y, BTN_W, BTN_H, globalAlarm ? TFT_RED : (muteOn ? TFT_YELLOW : TFT_DARKGREY));
+    tft.fillRect(BTN_GAP, BTN_Y, BTN_W, BTN_H, muteOn ? TFT_YELLOW : (globalAlarm ? TFT_RED : TFT_DARKGREY));
     drawMixedString(muteOn ? "取消消音" : "取消警报", BTN_GAP + 15, BTN_Y + 4, TFT_BLACK);
     lastMuteOn_Button = muteOn;
     lastGlobalAlarm_Button = globalAlarm;
@@ -1657,8 +1707,8 @@ void drawParamScreen() {
     int y = 28 + i * 30;
     int val = (i == paramSel) ? paramEditVal[i] : sysParams[uiToSys[i]];
     if (i == paramSel) {
-      tft.fillRect(8, y, 300, 28, COLOR_SPACEGREY);
-      tft.fillTriangle(10, y + 3, 10, y + 13, 18, y + 8, TFT_DARKGREY);
+      tft.fillRect(8, y, 300, 28, TFT_BLACK);
+      tft.fillTriangle(6, y + 5, 6, y + 17, 14, y + 11, TFT_YELLOW);
       drawMixedString(labels[i], 24, y + 1, TFT_WHITE, 1.0f);
       char buf[8];
       snprintf(buf, sizeof(buf), "%04d", val);
@@ -1669,8 +1719,8 @@ void drawParamScreen() {
         drawAsciiChar24(c[0], xNum + d * 14, y + 1, color, 1.0f);
       }
       drawMixedString(units[i], 260, y + 1, TFT_CYAN, 1.0f);
-      int triX = xNum + paramDpos * 14 + 4;
-      tft.fillTriangle(triX, y + 24, triX + 6, y + 24, triX + 3, y + 20, TFT_YELLOW);
+      int triX = xNum + paramDpos * 14 + 3;
+      tft.fillTriangle(triX, y + 26, triX + 8, y + 26, triX + 4, y + 20, TFT_YELLOW);
     } else {
       tft.fillRect(8, y, 300, 28, TFT_BLACK);
       drawMixedString(labels[i], 24, y + 1, TFT_WHITE, 1.0f);
@@ -1706,7 +1756,7 @@ void updateParamScreen() {
   static const uint8_t uiToSys[] = {0,1,2,3,4,5,7};
   if (paramLastSel != paramSel) {
     int oldY = 28 + paramLastSel * 30;
-    tft.fillRect(8, oldY, 300, 28, TFT_BLACK);
+    tft.fillRect(4, oldY, 304, 28, TFT_BLACK);
     drawMixedString(labels[paramLastSel], 24, oldY + 1, TFT_WHITE, 1.0f);
     char oldBuf[8];
     snprintf(oldBuf, sizeof(oldBuf), "%04d", (int)sysParams[uiToSys[paramLastSel]]);
@@ -1714,8 +1764,8 @@ void updateParamScreen() {
     drawMixedString(units[paramLastSel], 260, oldY + 1, TFT_CYAN, 1.0f);
   }
   int newY = 28 + paramSel * 30;
-  tft.fillRect(8, newY, 300, 28, COLOR_SPACEGREY);
-  tft.fillTriangle(10, newY + 3, 10, newY + 13, 18, newY + 8, TFT_DARKGREY);
+  tft.fillRect(8, newY, 300, 28, TFT_BLACK);
+  tft.fillTriangle(6, newY + 5, 6, newY + 17, 14, newY + 11, TFT_YELLOW);
   drawMixedString(labels[paramSel], 24, newY + 1, TFT_WHITE, 1.0f);
   int val = paramEditVal[paramSel];
   char buf[8];
@@ -1727,8 +1777,8 @@ void updateParamScreen() {
     drawAsciiChar24(c[0], xNum + d * 14, newY + 1, color, 1.0f);
   }
   drawMixedString(units[paramSel], 260, newY + 1, TFT_CYAN, 1.0f);
-  int triX = xNum + paramDpos * 14 + 4;
-  tft.fillTriangle(triX, newY + 24, triX + 6, newY + 24, triX + 3, newY + 20, TFT_YELLOW);
+  int triX = xNum + paramDpos * 14 + 3;
+  tft.fillTriangle(triX, newY + 26, triX + 8, newY + 26, triX + 4, newY + 20, TFT_YELLOW);
   paramLastSel = paramSel;
 }
 
@@ -1840,6 +1890,15 @@ void processKeys() {
   }
   if (k2 == LOW && !k2LongFired && now - k2PressTime >= KEY_LONG_PRESS_MS) {
     k2LongFired = true;
+    if (mode == 4) {
+      beep(2);
+      tft.fillRect(80, 120, 320, 60, TFT_BLACK);
+      tft.drawRect(80, 120, 320, 60, TFT_WHITE);
+      drawMixedString("放弃修改", 150, 142, TFT_YELLOW, 1.5f);
+      delay(1500);
+      mode = 2;
+      drawScreen();
+    }
     if (mode == 5) {
       beep(2);
       calibEditTemp = calibInitTemp;
@@ -1984,6 +2043,7 @@ void processKeys() {
         int div = (pwdDpos == 0) ? 100 : (pwdDpos == 1) ? 10 : 1;
         int digit = (inputPwd / div) % 10;
         int newDigit = (digit + 1) % 10;
+        drawDigitScroll(150 + pwdDpos * 14, 100, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
         inputPwd = inputPwd - digit * div + newDigit * div;
         updatePasswordScreen();
       } else if (mode == 5) {
@@ -1995,6 +2055,7 @@ void processKeys() {
           int32_t absT = calibEditTemp < 0 ? -calibEditTemp : calibEditTemp;
           int digit = (absT / div) % 10;
           int newDigit = (digit + 1) % 10;
+          drawDigitScroll(200 + (calibDpos - 1) * 14, 80, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
           absT = absT - digit * div + newDigit * div;
           bool tNeg = calibEditTemp < 0 || (calibEditTemp == 0 && calibTempNeg);
           calibEditTemp = tNeg ? -absT : absT;
@@ -2002,6 +2063,7 @@ void processKeys() {
           int div = (calibDpos == 0) ? 1000 : (calibDpos == 1) ? 100 : (calibDpos == 2) ? 10 : 1;
           int digit = (calibEditPress / div) % 10;
           int newDigit = (digit + 1) % 10;
+          drawDigitScroll(200 + calibDpos * 14, 140, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
           calibEditPress = calibEditPress - digit * div + newDigit * div;
         }
         updateCalibScreen();
@@ -2009,6 +2071,7 @@ void processKeys() {
         int div = (paramDpos == 0) ? 1000 : (paramDpos == 1) ? 100 : (paramDpos == 2) ? 10 : 1;
         int digit = (paramEditVal[paramSel] / div) % 10;
         int newDigit = (digit + 1) % 10;
+        drawDigitScroll(200 + paramDpos * 14, 28 + paramSel * 30 + 1, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
         paramEditVal[paramSel] = paramEditVal[paramSel] - digit * div + newDigit * div;
         updateParamScreen();
       } else if (mode == 7) {
@@ -2016,6 +2079,7 @@ void processKeys() {
         int div = (pwdDpos == 0) ? 100 : (pwdDpos == 1) ? 10 : 1;
         int digit = (inputPwd / div) % 10;
         int newDigit = (digit + 1) % 10;
+        drawDigitScroll(150 + pwdDpos * 14, 100, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
         inputPwd = inputPwd - digit * div + newDigit * div;
         updatePasswordScreen();
       }
@@ -2238,6 +2302,7 @@ bool flashLoadAll() {
 // ====== 初始化 ======
 void setup() {
   Serial.begin(115200);
+  modbus.begin(1, Serial, PA11);
 
   tft.begin();               
   tft.setRotation(1);
@@ -2481,6 +2546,59 @@ void loop() {
   if (needRedraw) {
     drawScreen();
     needRedraw = false;
+  }
+
+  // ====== Modbus 寄存器同步（只读量刷新到 holdingRegs） ======
+  modbus.holdingRegs[0] = (uint16_t)(tempVal * 10);
+  modbus.holdingRegs[1] = (uint16_t)pressVal;
+  modbus.holdingRegs[2] = (uint16_t)(runElapsedSec & 0xFFFF);
+  modbus.holdingRegs[3] = (uint16_t)(flowDisplayVal * 100);
+  modbus.holdingRegs[4] = digitalRead(INLET_RELAY) ? 1 : 0;
+  modbus.holdingRegs[5] = digitalRead(EXHAUST_RELAY) ? 1 : 0;
+  modbus.holdingRegs[6] = digitalRead(POWER_RELAY) ? 1 : 0;
+  modbus.holdingRegs[7] = digitalRead(ALARM_RELAY) ? 1 : 0;
+  for (int i = 0; i < 8; i++) modbus.holdingRegs[8 + i] = (uint16_t)sysParams[i];
+  modbus.holdingRegs[16] = muteOn ? 1 : 0;
+
+  modbus.poll();
+
+  // ====== Modbus 控制写入处理 ======
+  static uint16_t lastMuteReg = 0, lastSysCtrlReg = 0;
+  static uint16_t lastParamRegs[8] = {0};
+  static bool paramInit = false;
+  if (!paramInit) {
+    for (int i = 0; i < 8; i++) lastParamRegs[i] = (uint16_t)sysParams[i];
+    paramInit = true;
+  }
+  if (modbus.holdingRegs[16] != lastMuteReg) {
+    lastMuteReg = modbus.holdingRegs[16];
+    muteOn = (modbus.holdingRegs[16] != 0);
+    if (muteOn) digitalWrite(ALARM_RELAY, LOW);
+    else if (globalAlarm) digitalWrite(ALARM_RELAY, HIGH);
+  }
+  if (modbus.holdingRegs[17] != lastSysCtrlReg) {
+    lastSysCtrlReg = modbus.holdingRegs[17];
+    if (modbus.holdingRegs[17] == 1 && !systemActive) {
+      mode = 1; countdownRemain = sysParams[5]; inPositiveMode = true;
+      modeTimer = millis(); initialCheckDone = true; systemActive = true;
+      countdownDoneFirstRun = false; systemRunningNormal = false;
+      powerOnDelivered = false; runElapsedSec = 0; runTimer = 0;
+      needRedraw = true;
+    } else if (modbus.holdingRegs[17] == 0 && systemActive) {
+      inPositiveMode = false; systemActive = false; countdownRemain = 0;
+      countdownDoneFirstRun = false; systemRunningNormal = false;
+      runElapsedSec = 0; runTimer = 0;
+      digitalWrite(POWER_RELAY, LOW); digitalWrite(INLET_RELAY, LOW);
+      digitalWrite(EXHAUST_RELAY, LOW); digitalWrite(ALARM_RELAY, LOW);
+      mode = 0; needRedraw = true;
+    }
+  }
+  for (int i = 0; i < 8; i++) {
+    if (modbus.holdingRegs[8 + i] != lastParamRegs[i]) {
+      lastParamRegs[i] = modbus.holdingRegs[8 + i];
+      sysParams[i] = modbus.holdingRegs[8 + i];
+      flashSaveAll();
+    }
   }
 
   delay(120);
