@@ -144,7 +144,7 @@ static int32_t calibAdc1Raw = 0, calibAdc2Raw = 0;
 // ====== 校准界面变量 ======
 static uint8_t calibSel = 0, calibDpos = 0;
 static int32_t calibEditTemp = 0, calibEditPress = 0;
-static bool calibTempNeg = false;
+static uint8_t calibTempSign = 0; // 0='0', 1='+', 2='-'
 // 进入校准页时备份的初始值，放弃时恢复到此值而非清零
 static int32_t calibInitTemp = 0, calibInitPress = 0;
 
@@ -1598,22 +1598,21 @@ void drawCalibScreen() {
   drawMixedString("校准温度", 30, 80, TFT_WHITE, 1.0f);
   drawMixedString("℃", 260, 80, TFT_WHITE, 1.0f);
   int32_t absT = calibEditTemp < 0 ? -calibEditTemp : calibEditTemp;
-  int t0 = absT / 1000;
-  int t1 = (absT / 100) % 10;
-  int t2 = (absT / 10) % 10;
-  int t3 = absT % 10;
-  bool tNeg = calibEditTemp < 0 || (calibEditTemp == 0 && calibTempNeg);
-  char signCh = tNeg ? '-' : '+';
+  absT = absT % 1000;
+  int t0 = absT / 100;
+  int t1 = (absT / 10) % 10;
+  int t2 = absT % 10;
+  char signCh = (calibTempSign == 0) ? '0' : (calibTempSign == 1) ? '+' : '-';
   uint16_t signColor = (calibSel == 1 && calibDpos == 0) ? TFT_YELLOW : TFT_CYAN;
-  drawAsciiChar24(signCh, 184, 80, signColor, 1.0f);
-  for (int i = 0; i < 4; i++) {
-    int digit = (i == 0) ? t0 : (i == 1) ? t1 : (i == 2) ? t2 : t3;
-    d[0] = '0' + digit;
+  drawAsciiChar24(signCh, xBase, 80, signColor, 1.0f);
+  int digits[3] = {t0, t1, t2};
+  for (int i = 0; i < 3; i++) {
+    d[0] = '0' + digits[i];
     uint16_t color = (calibSel == 1 && (calibDpos - 1) == i) ? TFT_YELLOW : TFT_CYAN;
-    drawAsciiChar24(d[0], xBase + i * 14, 80, color, 1.0f);
+    drawAsciiChar24(d[0], xBase + (i + 1) * 14, 80, color, 1.0f);
   }
   if (calibSel == 1) {
-    int triX = (calibDpos == 0) ? 188 : xBase + (calibDpos - 1) * 14 + 4;
+    int triX = xBase + calibDpos * 14 + 4;
     tft.fillTriangle(triX, 108, triX + 6, 108, triX + 3, 104, TFT_YELLOW);
   }
   drawMixedString("校准压力", 30, 140, TFT_WHITE, 1.0f);
@@ -1654,27 +1653,26 @@ void drawCalibScreen() {
 void updateCalibScreen() {
   int xBase = 200;
   char d[2] = {0};
-  tft.fillRect(180, 80, 80, 30, TFT_BLACK);
-  tft.fillRect(xBase - 20, 100, 80, 10, TFT_BLACK);
+  tft.fillRect(xBase, 80, 60, 30, TFT_BLACK);
+  tft.fillRect(xBase, 100, 60, 10, TFT_BLACK);
   tft.fillRect(xBase, 140, 60, 30, TFT_BLACK);
   tft.fillRect(xBase - 20, 160, 80, 10, TFT_BLACK);
   int32_t absT = calibEditTemp < 0 ? -calibEditTemp : calibEditTemp;
-  int t0 = absT / 1000;
-  int t1 = (absT / 100) % 10;
-  int t2 = (absT / 10) % 10;
-  int t3 = absT % 10;
-  bool tNeg = calibEditTemp < 0 || (calibEditTemp == 0 && calibTempNeg);
-  char signCh = tNeg ? '-' : '+';
+  absT = absT % 1000;
+  int t0 = absT / 100;
+  int t1 = (absT / 10) % 10;
+  int t2 = absT % 10;
+  char signCh = (calibTempSign == 0) ? '0' : (calibTempSign == 1) ? '+' : '-';
   uint16_t signColor = (calibSel == 1 && calibDpos == 0) ? TFT_YELLOW : TFT_CYAN;
-  drawAsciiChar24(signCh, 184, 80, signColor, 1.0f);
-  for (int i = 0; i < 4; i++) {
-    int digit = (i == 0) ? t0 : (i == 1) ? t1 : (i == 2) ? t2 : t3;
-    d[0] = '0' + digit;
+  drawAsciiChar24(signCh, xBase, 80, signColor, 1.0f);
+  int digits[3] = {t0, t1, t2};
+  for (int i = 0; i < 3; i++) {
+    d[0] = '0' + digits[i];
     uint16_t color = (calibSel == 1 && (calibDpos - 1) == i) ? TFT_YELLOW : TFT_CYAN;
-    drawAsciiChar24(d[0], xBase + i * 14, 80, color, 1.0f);
+    drawAsciiChar24(d[0], xBase + (i + 1) * 14, 80, color, 1.0f);
   }
   if (calibSel == 1) {
-    int triX = (calibDpos == 0) ? 188 : xBase + (calibDpos - 1) * 14 + 4;
+    int triX = xBase + calibDpos * 14 + 4;
     tft.fillTriangle(triX, 108, triX + 6, 108, triX + 3, 104, TFT_YELLOW);
   }
   int p0 = calibEditPress / 1000;
@@ -1806,6 +1804,7 @@ void saveCalibration(int32_t tempRaw, int32_t pressRaw, float tempOffset, float 
     calibPressVal = pressOffset;
     calibEditTemp = tempTarget;
     calibEditPress = pressTarget;
+    calibTempSign = (tempTarget < 0) ? 2 : (tempTarget > 0) ? 1 : 0;
     calibSaved = true;
     flashSaveAll();
 }
@@ -1822,11 +1821,13 @@ void loadCalibration() {
         calibAdc2Val = 0.0f;
         calibEditTemp = 26;
         calibEditPress = 0;
+        calibTempSign = 1;
         calibSaved = false;
     }
     if (calibTempVal < 1.0f && calibTempVal > -1.0f) {
         calibTempVal = 26.0f;
         calibEditTemp = 26;
+        calibTempSign = 1;
     }
 }
 
@@ -1904,6 +1905,7 @@ void processKeys() {
       calibEditTemp = calibInitTemp;
       calibEditPress = calibInitPress;
       calibDpos = 0;
+      calibTempSign = (calibEditTemp < 0) ? 2 : (calibEditTemp > 0) ? 1 : 0;
       tft.fillRect(80, 120, 320, 60, TFT_BLACK);
       tft.drawRect(80, 120, 320, 60, TFT_WHITE);
       drawMixedString("放弃修改", 150, 142, TFT_YELLOW, 1.5f);
@@ -1978,6 +1980,7 @@ void processKeys() {
       calibAdc2Val = 0.0f;
       calibEditTemp = 0;
       calibEditPress = 0;
+      calibTempSign = 0;
       calibSaved = false;
       flashSaveAll();
       tft.fillRect(60, 120, 360, 60, TFT_BLACK);
@@ -2048,17 +2051,23 @@ void processKeys() {
         updatePasswordScreen();
       } else if (mode == 5) {
         if (calibSel == 1 && calibDpos == 0) {
-          if (calibEditTemp == 0) calibTempNeg = !calibTempNeg;
-          else calibEditTemp = -calibEditTemp;
-        } else if (calibSel == 1) {
-          int div = (calibDpos == 1) ? 1000 : (calibDpos == 2) ? 100 : (calibDpos == 3) ? 10 : 1;
+          char oldCh = (calibTempSign == 0) ? '0' : (calibTempSign == 1) ? '+' : '-';
+          if (calibTempSign == 0) calibTempSign = 1;
+          else if (calibTempSign == 1) calibTempSign = 2;
+          else calibTempSign = 1;
+          char newCh = (calibTempSign == 0) ? '0' : (calibTempSign == 1) ? '+' : '-';
+          drawDigitScroll(200, 80, oldCh, newCh, TFT_YELLOW, 14, TFT_BLACK);
           int32_t absT = calibEditTemp < 0 ? -calibEditTemp : calibEditTemp;
+          calibEditTemp = (calibTempSign == 2) ? -absT : absT;
+        } else if (calibSel == 1) {
+          int div = (calibDpos == 1) ? 100 : (calibDpos == 2) ? 10 : 1;
+          int32_t absT = calibEditTemp < 0 ? -calibEditTemp : calibEditTemp;
+          absT = absT % 1000;
           int digit = (absT / div) % 10;
           int newDigit = (digit + 1) % 10;
-          drawDigitScroll(200 + (calibDpos - 1) * 14, 80, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
+          drawDigitScroll(200 + calibDpos * 14, 80, '0' + digit, '0' + newDigit, TFT_YELLOW, 14, TFT_BLACK);
           absT = absT - digit * div + newDigit * div;
-          bool tNeg = calibEditTemp < 0 || (calibEditTemp == 0 && calibTempNeg);
-          calibEditTemp = tNeg ? -absT : absT;
+          calibEditTemp = (calibTempSign == 2) ? -absT : absT;
         } else {
           int div = (calibDpos == 0) ? 1000 : (calibDpos == 1) ? 100 : (calibDpos == 2) ? 10 : 1;
           int digit = (calibEditPress / div) % 10;
@@ -2103,7 +2112,7 @@ void processKeys() {
       } else if (mode == 4) {
         pwdDpos = (pwdDpos + 1) % 3; updatePasswordScreen();
       } else if (mode == 5) {
-        calibDpos = (calibDpos + 1) % ((calibSel == 1) ? 5 : 4); updateCalibScreen();
+        calibDpos = (calibDpos + 1) % 4; updateCalibScreen();
       } else if (mode == 6) {
         paramDpos = (paramDpos + 1) % 4; updateParamScreen();
       } else if (mode == 7) {
@@ -2157,6 +2166,7 @@ void processKeys() {
           case 1:
             calibSel = 1;
             calibDpos = 0;
+            calibTempSign = (calibEditTemp < 0) ? 2 : (calibEditTemp > 0) ? 1 : 0;
             calibInitTemp = calibEditTemp;
             calibInitPress = calibEditPress;
             mode = 5;
