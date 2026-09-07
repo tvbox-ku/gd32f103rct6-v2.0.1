@@ -79,6 +79,6 @@
     writecommand(0x36);
     writedata(0x48);
 
-    writecommand(0x29);                     // display on
+    writecommand(0x28);                     // display on
     delay(150);
 }

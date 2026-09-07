@@ -747,8 +747,7 @@
         #define GPIOX GPIOD
       #endif
 
-      // Write 8 bits to TFT
-      #define tft_Write_8(C)   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C)); WR_L; WR_STB
+      #define tft_Write_8(C)   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C)); __NOP(); WR_L; WR_STB
 
       #if defined (SSD1963_DRIVER)
 
@@ -764,13 +763,16 @@
 
       #else
 
-          // Write 16 bits to TFT
-          #define tft_Write_16(C)  GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>8)); WR_L; WR_STB; \
-                                   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>0)); WR_L; WR_STB
-
-          // 16-bit write with swapped bytes
-          #define tft_Write_16S(C) GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>0)); WR_L; WR_STB; \
-                                   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>8)); WR_L; WR_STB
+          #if defined (TFT_16BIT_BUS)
+          #define tft_Write_16(C)  GPIOX->BSRR = ((~((uint32_t)(C)) & 0xFFFF) << 16) | ((uint32_t)(C) & 0xFFFF); __NOP(); WR_L; WR_STB
+          #define tft_Write_16S(C) { uint16_t _sw=(uint16_t)(C); _sw=(_sw>>8)|(_sw<<8); GPIOX->BSRR = ((~((uint32_t)_sw)&0xFFFF)<<16) | ((uint32_t)_sw & 0xFFFF); __NOP(); WR_L; WR_STB; }
+          #else
+          // Write 16 bits to TFT (two 8-bit transfers)
+          #define tft_Write_16(C)  GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>8)); __NOP(); WR_L; WR_STB; \
+                                   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>0)); __NOP(); WR_L; WR_STB
+          #define tft_Write_16S(C) GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>0)); __NOP(); WR_L; WR_STB; \
+                                   GPIOX->BSRR = (0x00FF0000 | (uint8_t)(C>>8)); __NOP(); WR_L; WR_STB
+          #endif
       #endif
 
       #define tft_Write_32(C)    tft_Write_16((uint16_t)((C)>>16)); tft_Write_16((uint16_t)(C))

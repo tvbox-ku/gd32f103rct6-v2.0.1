@@ -24,4 +24,3 @@
       _height = TFT_WIDTH;
      break;
   }
-   

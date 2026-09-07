@@ -156,8 +156,8 @@ void TFT_eSPI::busDir(uint32_t mask, uint8_t mode)
   #endif
 #elif defined (STM_PORTB_DATA_BUS)
   #if defined (STM32F1xx)
-    if (mode == OUTPUT) GPIOB->CRL = 0x33333333;
-    else GPIOB->CRL = 0x88888888;
+    if (mode == OUTPUT) { GPIOB->CRL = 0x33333333; GPIOB->CRH = 0x33333333; }
+    else { GPIOB->CRL = 0x88888888; GPIOB->CRH = 0x88888888; }
   #else
     if (mode == OUTPUT) GPIOB->MODER = (GPIOB->MODER & 0xFFFF0000) | 0x00005555;
     else GPIOB->MODER &= 0xFFFF0000;
@@ -418,7 +418,7 @@ void TFT_eSPI::pushPixels(const void* data_in, uint32_t len)
   if(_swapBytes) {
     while ( len-- ) {
       TX_FIFO = (uint8_t)(*data>>8);
-      TX_FIFO = (uint8_t)(*data);
+      TX_FIFO = (uint8_t)(*data<<8);
       data++;
     }
   }
