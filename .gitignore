@@ -6,3 +6,10 @@
 
 # 根目录误放的 main.cpp 副本
 /main.cpp
+
+# 工具生成文件
+.qoder/
+.codegraph/
+.codeartsdoer/
+.merkle-snapshot.json
+compile_commands.json
